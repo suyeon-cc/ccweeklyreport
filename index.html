@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>첫차 UA Weekly Report</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --mint:#465fff;--pink:#ff46c4;--blue:#00ABFF;--coral:#ff4668;
+  --topLine:#e84545;--lowLine:#ff8c42;
+  --ok:#00ABFF;--warn-g:#8AF293;--bad:#ff4668;
+  --bg:#f5f5f0;--surface:#ffffff;--card:#ffffff;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
+  --t1:#0f172a;--t2:#334155;--t3:#64748b;
+  --font:'Pretendard',-apple-system,sans-serif;
+  --r:12px;--rs:7px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;display:flex;font-size:13px;line-height:1.5}
+
+/* ── SIDEBAR ── */
+.sb{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0 20px;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sb-mark{width:32px;height:32px;background:#0f172a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.sb-brand{font-size:13px;font-weight:700;color:var(--t1)}
+.sb-weekbadge{display:inline-flex;align-items:center;background:rgba(70,95,255,.08);color:#465fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:3px;letter-spacing:.03em}
+.sb-sect{font-size:9px;font-weight:700;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;padding:0 20px;margin:12px 0 4px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 20px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;border-left:2px solid transparent;transition:all .12s;user-select:none}
+.sb-item:hover{color:var(--t1);background:rgba(0,0,0,.04)}
+.sb-item.active{color:#0f172a;background:rgba(0,0,0,.05);border-left-color:#0f172a;font-weight:600}
+.sb-foot{margin-top:auto;padding:14px 20px 0;border-top:1px solid var(--border)}
+.sb-foot-l{font-size:9px;color:var(--t3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.08em}
+.sb-foot-v{font-size:11px;color:var(--t2)}
+
+/* ── WEEK SELECTOR ── */
+.wk-wrap{padding:10px 16px 14px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.wk-label{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}
+.wk-custom{position:relative;width:100%}
+.wk-trigger{display:flex;align-items:center;justify-content:space-between;width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font);font-size:11px;font-weight:500;color:var(--t1);transition:all .15s;user-select:none}
+.wk-trigger:hover{border-color:#465fff;background:#fff}
+.wk-trigger.open{border-color:#465fff;background:#fff;box-shadow:0 0 0 3px rgba(70,95,255,.1)}
+.wk-trigger-txt{display:flex;flex-direction:column;gap:1px}
+.wk-trigger-main{font-size:11px;font-weight:600;color:var(--t1)}
+.wk-trigger-sub{font-size:9px;color:var(--t3)}
+.wk-arrow{width:14px;height:14px;display:flex;align-items:center;justify-content:center;color:var(--t3);flex-shrink:0;transition:transform .15s}
+.wk-arrow.open{transform:rotate(180deg)}
+.wk-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--border2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:200;max-height:240px;overflow-y:auto;display:none}
+.wk-dropdown.open{display:block}
+.wk-option{padding:8px 12px;cursor:pointer;transition:background .1s;display:flex;flex-direction:column;gap:1px}
+.wk-option:first-child{border-radius:9px 9px 0 0}
+.wk-option:last-child{border-radius:0 0 9px 9px}
+.wk-option:hover{background:rgba(70,95,255,.06)}
+.wk-option.selected{background:rgba(70,95,255,.08)}
+.wk-option-main{font-size:11px;font-weight:600;color:var(--t1)}
+.wk-option-sub{font-size:9px;color:var(--t3)}
+.wk-option.selected .wk-option-main{color:#465fff}
+
+/* ── MAIN ── */
+.main{flex:1;padding:28px 32px 48px;min-width:0;overflow-x:hidden}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.ph-left{display:flex;flex-direction:column;gap:3px}
+.ph-eyebrow{font-size:10px;font-weight:600;color:#0f172a;text-transform:uppercase;letter-spacing:.12em}
+.ph-title{font-size:18px;font-weight:700;color:var(--t1);letter-spacing:-.3px}
+.ph-sub{font-size:11px;color:var(--t3)}
+.ph-badge{background:var(--card);border:1px solid var(--border2);padding:6px 13px;border-radius:var(--rs);font-size:11px;font-weight:500;color:var(--t2)}
+
+/* ── SECTION ── */
+.sec{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px;margin:20px 0 12px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-accent{color:#0f172a}
+.sec-sub{font-size:9px;color:var(--t3);font-weight:400;text-transform:none;letter-spacing:0}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.mb12{margin-bottom:12px}
+
+/* ── CARD ── */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:16px 18px}
+.ct{font-size:11px;font-weight:700;color:var(--t1);margin-bottom:1px}
+.cs{font-size:10px;color:var(--t3);margin-bottom:12px}
+
+/* ── WoW ── */
+.wow-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:14px 16px}
+.wow-lbl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.wow-val{font-size:20px;font-weight:800;color:var(--t1);letter-spacing:-.6px;line-height:1;margin-bottom:9px}
+.wow-deltas{display:flex;flex-direction:column;gap:4px}
+.wow-dr{display:flex;justify-content:space-between;align-items:center}
+.wow-dl{font-size:9px;color:var(--t3)}
+.wow-dv{font-size:10px;font-weight:700;color:#0f172a}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{font-size:9px;font-weight:600;color:var(--t3);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.tbl th.r{text-align:right}
+.tbl td{padding:8px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(0,0,0,.03)}
+.td-r{text-align:right;color:var(--t2)}
+.td-ok{color:#00ABFF;font-weight:700;text-align:right}
+.td-bd{color:#ff4668;text-align:right}
+.td-wn{color:#d97706;font-weight:600;text-align:right}
+.cnm{font-weight:600;color:var(--t1)}
+.tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:20px;margin-left:4px;vertical-align:middle}
+.tag-new{background:rgba(0,171,255,.15);color:#00ABFF}
+
+/* ── BADGE ── */
+.ob{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.ob-ok{background:rgba(0,171,255,.1);color:#00ABFF}
+.ob-wn{background:rgba(217,119,6,.12);color:#d97706}
+.ob-bd{background:rgba(255,70,104,.1);color:#ff4668}
+
+/* ── ROLE GRID ── */
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:16px;border:1px solid var(--border2);border-radius:var(--r);overflow:hidden}
+.role-side{padding:12px 16px}
+.role-side.inst{background:rgba(70,95,255,.07);border-right:1px solid var(--border2)}
+.role-side.cpa{background:rgba(255,70,196,.07)}
+.role-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.role-side.inst .role-lbl{color:#465fff}
+.role-side.cpa .role-lbl{color:#ff46c4}
+.role-name{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:2px}
+.role-desc{font-size:10px;color:var(--t3)}
+.role-kpi{font-size:10px;font-weight:600;margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.role-side.inst .role-kpi{color:#465fff}
+.role-side.cpa .role-kpi{color:#ff46c4}
+
+/* ── 4-CHART ── */
+.chart4-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.chart4-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:14px 14px 10px}
+.c4-label{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
+.c4-current{font-size:18px;font-weight:800;color:var(--t1);letter-spacing:-.5px;line-height:1.1;margin-bottom:3px}
+.c4-delta{font-size:9px;font-weight:600;margin-bottom:10px;color:#0f172a}
+
+/* ── TOP/LOW ── */
+.toplow-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.toplow-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:14px 14px 10px}
+.tl-legend{display:flex;gap:12px;margin-top:6px}
+.tl-leg-item{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)}
+.tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── INSIGHT ── */
+.insight-panel{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:12px}
+.ip-hd{padding:10px 16px;background:linear-gradient(90deg,rgba(70,95,255,.08),rgba(255,70,196,.06));font-size:11px;font-weight:700;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.ip-row{display:grid;grid-template-columns:160px 1fr auto;gap:12px;align-items:start;padding:11px 16px;border-bottom:1px solid var(--border)}
+.ip-row:last-child{border-bottom:none}
+.ip-row:hover{background:rgba(0,0,0,.02)}
+.ip-lbl{font-size:11px;font-weight:700;color:var(--t1)}
+.ip-sub{font-size:9px;color:var(--t3);margin-top:1px}
+.ip-metrics{display:flex;gap:8px;flex-wrap:wrap}
+.ip-m{font-size:10px;color:var(--t3)}
+.ip-m strong{color:var(--t2);font-weight:600}
+.ip-desc{font-size:10px;color:var(--t3);margin-top:5px;line-height:1.55}
+.ip-desc span{display:block;padding:1px 0}
+.ip-desc span::before{content:"• ";color:var(--t3)}
+.action-btn{display:inline-block;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.a-up{background:rgba(70,95,255,.1);color:#465fff}
+.a-cut{background:rgba(255,70,104,.1);color:#ff4668}
+
+/* ── HIER TABLE ── */
+.hier-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.hier-tbl th{font-size:9px;font-weight:600;color:var(--t3);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.hier-tbl th.r{text-align:right}
+.hier-tbl tr.cr td{padding:8px;background:rgba(0,0,0,.03);font-weight:700;font-size:11px;border-bottom:1px solid var(--border);cursor:pointer}
+.hier-tbl tr.ar td{padding:7px 8px 7px 22px;font-weight:600;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border);cursor:pointer}
+.hier-tbl tr.dr td{padding:6px 8px 6px 38px;font-size:10px;color:var(--t3);border-bottom:1px solid rgba(0,0,0,.04)}
+.hier-tbl tr:hover td{background:rgba(0,0,0,.04)}
+.hier-tbl td.r{text-align:right}
+.ex{display:inline-block;width:10px;margin-right:5px;transition:transform .15s;font-size:8px;color:var(--t3)}
+.expanded .ex{transform:rotate(90deg)}
+.fk{background:rgba(0,171,255,.1);color:#00ABFF;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:700}
+.fw{background:rgba(138,242,147,.2);color:#3a9e40;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:700}
+.fr{background:rgba(255,70,104,.1);color:#ff4668;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:700}
+
+/* ── LOADER ── */
+.loading-bar{display:flex;align-items:center;gap:10px;padding:16px;font-size:11px;color:var(--t3)}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:#465fff;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOOLTIP ── */
+.chart-tooltip{position:fixed;background:#ffffff;color:#0f172a;font-size:10px;font-family:var(--font);font-weight:500;padding:5px 9px;border-radius:6px;pointer-events:none;z-index:9999;display:none;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.12);border:1px solid #e2e8f0}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.view-panel{display:none}
+.view-panel.active{display:block}
+.no-data-msg{padding:32px;text-align:center;color:var(--t3);font-size:12px}
+</style>
+</head>
+<body>
+
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="sb-mark">UA</div>
+    <div>
+      <div class="sb-brand">첫차 UA</div>
+      <div class="sb-weekbadge" id="sb-week-badge">로딩중</div>
+    </div>
+  </div>
+
+  <div class="wk-wrap">
+    <div class="wk-label">주차 선택</div>
+    <div class="wk-custom">
+      <div class="wk-trigger" id="wk-trigger" onclick="toggleDropdown()">
+        <div class="wk-trigger-txt">
+          <div class="wk-trigger-main" id="wk-trigger-main">로딩 중...</div>
+          <div class="wk-trigger-sub" id="wk-trigger-sub"></div>
+        </div>
+        <div class="wk-arrow" id="wk-arrow">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <div class="wk-dropdown" id="wk-dropdown"></div>
+    </div>
+  </div>
+
+  <div class="sb-sect">Dashboard</div>
+  <div class="sb-item active" onclick="nav('overview',this)">Overview</div>
+  <div class="sb-sect">Campaign</div>
+  <div class="sb-item" onclick="nav('google',this)">Google Ads</div>
+  <div class="sb-item" onclick="nav('meta',this)">META</div>
+  <div class="sb-foot">
+    <div class="sb-foot-l">Source</div>
+    <div class="sb-foot-v">Adjust · Amplitude</div>
+    <div class="sb-foot-v" style="color:var(--t3);margin-top:2px" id="sb-period"></div>
+  </div>
+</aside>
+
+<main class="main">
+<div class="ph">
+  <div class="ph-left">
+    <div class="ph-eyebrow">Weekly Performance Report</div>
+    <div class="ph-title" id="ph-title">Overview</div>
+    <div class="ph-sub" id="ph-sub">Adjust 기준</div>
+  </div>
+  <div class="ph-badge" id="ph-badge">로딩 중</div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="view-panel active" id="view-overview">
+  <div id="overview-content"><div class="loading-bar"><div class="spinner"></div>데이터 로딩 중...</div></div>
+</div>
+
+<!-- GOOGLE -->
+<div class="view-panel" id="view-google">
+  <div id="google-content"><div class="loading-bar"><div class="spinner"></div>데이터 로딩 중...</div></div>
+</div>
+
+<!-- META -->
+<div class="view-panel" id="view-meta">
+  <div id="meta-content"><div class="loading-bar"><div class="spinner"></div>데이터 로딩 중...</div></div>
+</div>
+
+</main>
+<div class="chart-tooltip" id="chart-tooltip"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+// Apps Script 배포 후 URL을 아래에 붙여넣기
+// 배포 방법: 구글시트 → 확장 프로그램 → Apps Script → 코드 붙여넣기 → 배포 → 새 배포 → 웹 앱
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1WfzqQVUDBGqBJV2TPmae20p4NFdGH7rtLcnRKNpe6C37LONV8qWuWhO9zppjqzQ/exec";
+const HIER_DATA = {"2026-06-01": {"chut_app (aos)_2025_무사고": {"무사고_260112(기존 고효율2 + 신규소재4)": {"ads": [], "cost": 0, "install": 1, "contact": 4, "cpi": 0, "cpa": 0, "cpm": null, "ctr": null}}, "chut_app_conversion (aos)": {"매물형": {"ads": [{"name": "인생첫차_사초생예산_260601", "cost": 56038, "install": 13, "contact": 0, "cpi": 4311, "cpa": null, "cpm": 12661, "ctr": 1.2, "flag": "keep"}, {"name": "무사고_최저가_영상_260601", "cost": 55184, "install": 10, "contact": 0, "cpi": 5518, "cpa": null, "cpm": 20824, "ctr": 0.53, "flag": "watch"}, {"name": "무사고_최저가SUV_B_이미지_260601", "cost": 566988, "install": 127, "contact": 5, "cpi": 4464, "cpa": 113398, "cpm": 11391, "ctr": 1.26, "flag": "keep"}, {"name": "인생첫차_사초생예산_캐러셀_이미지_260601", "cost": 103491, "install": 16, "contact": 0, "cpi": 6468, "cpa": null, "cpm": 13361, "ctr": 0.92, "flag": "replace"}], "cost": 781701, "install": 166, "contact": 5, "cpi": 4709, "cpa": 156340, "cpm": 12101, "ctr": 1.18}, "매물형_릴스": {"ads": [{"name": "SUV_가격대별_영상_260601", "cost": 1292965, "install": 326, "contact": 2, "cpi": 3966, "cpa": 646482, "cpm": 10401, "ctr": 0.72, "flag": "keep"}, {"name": "인기모델_가격대별_영상_260601", "cost": 95977, "install": 32, "contact": 1, "cpi": 2999, "cpa": 95977, "cpm": 10571, "ctr": 0.74, "flag": "keep"}], "cost": 1388942, "install": 358, "contact": 3, "cpi": 3880, "cpa": 462981, "cpm": 10412, "ctr": 0.72}}, "chut_app_install (aos)": {"매물형": {"ads": [{"name": "경차만큼싼_매물형기본_이미지_260601", "cost": 74015, "install": 19, "contact": 0, "cpi": 3896, "cpa": null, "cpm": 8150, "ctr": 1.24, "flag": "watch"}, {"name": "연식오래됐지만_A(0904)_이미지_260601", "cost": 91545, "install": 26, "contact": 0, "cpi": 3521, "cpa": null, "cpm": 6527, "ctr": 0.97, "flag": "keep"}, {"name": "가성비하차감_캐러셀_이미지_260601", "cost": 637953, "install": 175, "contact": 5, "cpi": 3645, "cpa": 127591, "cpm": 7662, "ctr": 1.23, "flag": "keep"}], "cost": 803513, "install": 220, "contact": 5, "cpi": 3652, "cpa": 160703, "cpm": 7554, "ctr": 1.2}, "브랜딩형": {"ads": [{"name": "마세요_판매가_국산차2_이미지_260601", "cost": 374249, "install": 142, "contact": 2, "cpi": 2636, "cpa": 187124, "cpm": 9962, "ctr": 1.63, "flag": "keep"}, {"name": "마세요_판매가_국산차1_이미지_260601", "cost": 25739, "install": 4, "contact": 0, "cpi": 6435, "cpa": null, "cpm": 7344, "ctr": 0.86, "flag": "replace"}], "cost": 399988, "install": 146, "contact": 2, "cpi": 2740, "cpa": 199994, "cpm": 9738, "ctr": 1.56}}, "chut_app (aos)_2025_인생첫차": {"인생첫차_260303(고효율)": {"ads": [], "cost": 0, "install": 1, "contact": 2, "cpi": 0, "cpa": 0, "cpm": null, "ctr": null}}}, "2026-06-08": {"chut_app_conversion (aos)": {"매물형": {"ads": [{"name": "인생첫차_사초생예산_캐러셀_이미지_260601", "cost": 4676, "install": 0, "contact": 0, "cpi": null, "cpa": null, "cpm": 8232, "ctr": 0.35, "flag": "watch"}, {"name": "무사고_최저가SUV_B_이미지_260601", "cost": 875028, "install": 194, "contact": 1, "cpi": 4510, "cpa": 875028, "cpm": 9502, "ctr": 1.05, "flag": "keep"}, {"name": "인생첫차_사초생예산_260601", "cost": 59301, "install": 26, "contact": 0, "cpi": 2281, "cpa": null, "cpm": 8321, "ctr": 1.04, "flag": "keep"}, {"name": "무사고_최저가_영상_260601", "cost": 10971, "install": 5, "contact": 0, "cpi": 2194, "cpa": null, "cpm": 14211, "ctr": 1.04, "flag": "keep"}], "cost": 949976, "install": 225, "contact": 1, "cpi": 4222, "cpa": 949976, "cpm": 9447, "ctr": 1.04}, "매물형_릴스": {"ads": [{"name": "SUV_가격대별_영상_260601", "cost": 1166998, "install": 274, "contact": 8, "cpi": 4259, "cpa": 145875, "cpm": 10779, "ctr": 0.73, "flag": "keep"}, {"name": "인기모델_가격대별_영상_260601", "cost": 94227, "install": 23, "contact": 0, "cpi": 4097, "cpa": null, "cpm": 8137, "ctr": 0.44, "flag": "keep"}], "cost": 1261225, "install": 297, "contact": 8, "cpi": 4247, "cpa": 157653, "cpm": 10523, "ctr": 0.7}}, "chut_app_install (aos)": {"매물형": {"ads": [{"name": "연식오래됐지만_A(0904)_이미지_260601", "cost": 36695, "install": 10, "contact": 0, "cpi": 3670, "cpa": null, "cpm": 6133, "ctr": 0.84, "flag": "keep"}, {"name": "경차만큼싼_매물형기본_이미지_260601", "cost": 28978, "install": 9, "contact": 0, "cpi": 3220, "cpa": null, "cpm": 6901, "ctr": 1.48, "flag": "keep"}, {"name": "가성비하차감_캐러셀_이미지_260601", "cost": 525578, "install": 141, "contact": 6, "cpi": 3728, "cpa": 87596, "cpm": 7466, "ctr": 1.19, "flag": "keep"}], "cost": 591251, "install": 160, "contact": 6, "cpi": 3695, "cpa": 98542, "cpm": 7338, "ctr": 1.18}, "브랜딩형": {"ads": [{"name": "마세요_판매가_국산차2_이미지_260601", "cost": 630506, "install": 183, "contact": 3, "cpi": 3445, "cpa": 210169, "cpm": 9923, "ctr": 1.69, "flag": "keep"}, {"name": "마세요_판매가_국산차1_이미지_260601", "cost": 1007, "install": 0, "contact": 0, "cpi": null, "cpa": null, "cpm": 8607, "ctr": 0.0, "flag": "watch"}], "cost": 631513, "install": 183, "contact": 3, "cpi": 3451, "cpa": 210504, "cpm": 9921, "ctr": 1.68}}}}
+;
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let DAILY = {};   // {gt:{}, gi:{}, fbi:{}, fbc:{}, top:{}, low:{}}  date->row
+let WEEKS = [];   // [{key, label, isoWeek, week_start, week_end, gt, gi, fbi, fbc_daily, toplow_daily}]
+let curIdx = 0;
+let isDropdownOpen = false;
+let dataLoaded = false;
+
+/* ══════════════════════════════════════════
+   DATE UTILS
+══════════════════════════════════════════ */
+function isoWeekNumber(dateStr) {
+  const d = new Date(dateStr);
+  const jan4 = new Date(d.getFullYear(), 0, 4);
+  const startOfWeek1 = new Date(jan4);
+  startOfWeek1.setDate(jan4.getDate() - jan4.getDay() + 1);
+  const diff = d - startOfWeek1;
+  return Math.floor(diff / 604800000) + 1;
+}
+
+function weekStart(dateStr) {
+  const d = new Date(dateStr);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() + diff);
+  return mon.toISOString().slice(0,10);
+}
+
+function weekEnd(dateStr) {
+  const ws = weekStart(dateStr);
+  const d = new Date(ws);
+  d.setDate(d.getDate() + 6);
+  return d.toISOString().slice(0,10);
+}
+
+function fmtMMDD(dateStr) {
+  return dateStr.slice(5).replace('-','/');
+}
+
+/* ══════════════════════════════════════════
+   CSV FETCH & PARSE
+══════════════════════════════════════════ */
+async function fetchAllData() {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    throw new Error("Apps Script URL을 설정해주세요 (HTML 상단 APPS_SCRIPT_URL 변수)");
+  }
+  const res = await fetch(APPS_SCRIPT_URL, { redirect: 'follow' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+
+// Apps Script 배열 형식 [cost, imps, clicks, install, contact] → 객체로 변환
+function convertRow(arr) {
+  if (!arr || arr.length < 5) return null;
+  const [cost, imps, clicks, install, contact] = arr;
+  return {
+    cost, imps, clicks, install, contact,
+    cpm:     imps    > 0 ? Math.round(cost / imps * 1000)         : null,
+    ctr:     imps    > 0 ? parseFloat((clicks / imps * 100).toFixed(1)) : null,
+    cpi:     install > 0 ? Math.round(cost / install)              : null,
+    cpa:     contact > 0 ? Math.round(cost / contact)              : null,
+  };
+}
+
+function convertSheet(raw) {
+  const result = {};
+  for (const [date, arr] of Object.entries(raw)) {
+    const row = convertRow(arr);
+    if (row) result[date] = row;
+  }
+  return result;
+}
+
+/* ══════════════════════════════════════════
+   AGGREGATE WEEKS
+══════════════════════════════════════════ */
+function aggregateWeekly(daily) {
+  const weeks = {};
+  Object.entries(daily).sort().forEach(([d, v]) => {
+    const ws = weekStart(d);
+    if (!weeks[ws]) weeks[ws] = {cost:0,imps:0,clicks:0,install:0,contact:0};
+    weeks[ws].cost    += v.cost;
+    weeks[ws].imps    += v.imps;
+    weeks[ws].clicks  += v.clicks;
+    weeks[ws].install += v.install;
+    weeks[ws].contact += v.contact;
+  });
+  const result = {};
+  Object.entries(weeks).sort().forEach(([ws, w]) => {
+    result[ws] = {
+      cost: Math.round(w.cost), install: Math.round(w.install), contact: Math.round(w.contact),
+      cpm:  w.imps   > 0 ? Math.round(w.cost / w.imps * 1000) : null,
+      ctr:  w.imps   > 0 ? parseFloat((w.clicks / w.imps * 100).toFixed(1)) : null,
+      cpi:  w.install> 0 ? Math.round(w.cost / w.install) : null,
+      cpa:  w.contact> 0 ? Math.round(w.cost / w.contact) : null,
+    };
+  });
+  return result;
+}
+
+function buildWeekList(gt_w, gi_w, fbi_w) {
+  const allKeys = new Set([...Object.keys(gt_w),...Object.keys(gi_w),...Object.keys(fbi_w)]);
+  return [...allKeys].sort().map(ws => {
+    const we = weekEnd(ws);
+    const iso = isoWeekNumber(ws);
+    const mmStart = fmtMMDD(ws);
+    const mmEnd   = fmtMMDD(we);
+    return {
+      key: ws,
+      label: `${iso}주차 (${mmStart}~${mmEnd})`,
+      isoWeek: iso,
+      week_start: ws,
+      week_end: we,
+      gt:  gt_w[ws]  || null,
+      gi:  gi_w[ws]  || null,
+      fbi: fbi_w[ws] || null,
+    };
+  });
+}
+
+/* ══════════════════════════════════════════
+   MAIN LOAD
+══════════════════════════════════════════ */
+function setLoadMsg(msg) {
+  document.getElementById('overview-content').innerHTML =
+    `<div class="loading-bar"><div class="spinner"></div>${msg}</div>`;
+}
+
+async function loadData() {
+  try {
+    setLoadMsg('데이터 불러오는 중...');
+    const raw = await fetchAllData();
+    DAILY.gt  = convertSheet(raw.gt  || {});
+    DAILY.gi  = convertSheet(raw.gi  || {});
+    DAILY.fbi = convertSheet(raw.fbi || {});
+    DAILY.fbc = convertSheet(raw.fbc || {});
+    DAILY.top = convertSheet(raw.top || {});
+    DAILY.low = convertSheet(raw.low || {});
+
+    setLoadMsg('집계 처리 중...');
+    const gt_w  = aggregateWeekly(DAILY.gt);
+    const gi_w  = aggregateWeekly(DAILY.gi);
+    const fbi_w = aggregateWeekly(DAILY.fbi);
+    WEEKS = buildWeekList(gt_w, gi_w, fbi_w);
+
+    dataLoaded = true;
+    curIdx = WEEKS.length - 1;
+    initDropdown();
+    updateAll();
+  } catch(e) {
+    console.error('데이터 로드 실패:', e);
+    document.getElementById('overview-content').innerHTML =
+      `<div style="text-align:left;padding:24px">
+        <div style="font-size:13px;font-weight:600;color:#ff4668;margin-bottom:10px">⚠ 데이터 로드 실패</div>
+        <div style="font-size:11px;color:var(--t2);line-height:2;background:#f8f8f6;padding:12px 16px;border-radius:8px">
+          ${e.message === "Apps Script URL을 설정해주세요 (HTML 상단 APPS_SCRIPT_URL 변수)"
+            ? `<strong>Apps Script URL이 설정되지 않았어요</strong><br>
+               HTML 파일 상단의 <code>APPS_SCRIPT_URL</code> 변수에 배포된 URL을 붙여넣어주세요.`
+            : `오류: ${e.message}<br>
+               Apps Script가 올바르게 배포됐는지 확인해주세요.<br>
+               배포 설정: 웹 앱 → 액세스: 모든 사용자 (익명)`
+          }
+        </div>
+      </div>`;
+  }
+}
+
+/* ══════════════════════════════════════════
+   DROPDOWN
+══════════════════════════════════════════ */
+function initDropdown() {
+  const dd = document.getElementById('wk-dropdown');
+  dd.innerHTML = [...WEEKS].reverse().map((w, ri) => {
+    const i = WEEKS.length - 1 - ri;
+    return `<div class="wk-option${i===curIdx?' selected':''}" onclick="selectWeek(${i})">
+      <div class="wk-option-main">${w.label}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDropdown() {
+  isDropdownOpen = !isDropdownOpen;
+  document.getElementById('wk-trigger').classList.toggle('open', isDropdownOpen);
+  document.getElementById('wk-arrow').classList.toggle('open', isDropdownOpen);
+  document.getElementById('wk-dropdown').classList.toggle('open', isDropdownOpen);
+}
+
+function selectWeek(idx) {
+  curIdx = idx;
+  isDropdownOpen = false;
+  document.getElementById('wk-trigger').classList.remove('open');
+  document.getElementById('wk-arrow').classList.remove('open');
+  document.getElementById('wk-dropdown').classList.remove('open');
+  // 선택 표시 업데이트
+  document.querySelectorAll('.wk-option').forEach((el,ri) => {
+    const i = WEEKS.length - 1 - ri;
+    el.classList.toggle('selected', i === curIdx);
+  });
+  updateAll();
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.wk-custom') && isDropdownOpen) {
+    isDropdownOpen = false;
+    document.getElementById('wk-trigger').classList.remove('open');
+    document.getElementById('wk-arrow').classList.remove('open');
+    document.getElementById('wk-dropdown').classList.remove('open');
+  }
+});
+
+/* ══════════════════════════════════════════
+   UPDATE ALL
+══════════════════════════════════════════ */
+function updateAll() {
+  if (!dataLoaded || !WEEKS.length) return;
+  const w = WEEKS[curIdx];
+  
+  // 헤더 업데이트
+  document.getElementById('sb-week-badge').textContent = w.label;
+  document.getElementById('wk-trigger-main').textContent = w.label;
+  document.getElementById('sb-period').textContent = `${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)}`;
+  document.getElementById('ph-sub').textContent = `Adjust 기준 · ${w.label} · WoW: 전주 대비`;
+  document.getElementById('ph-badge').textContent = `${w.week_start.slice(0,7).replace('-','.')} ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)}`;
+  
+  // 6월 이후 여부
+  const isJuneOrLater = w.week_start >= '2026-06-01';
+  
+  renderOverview(w, isJuneOrLater);
+  
+  const cur = document.querySelector('.view-panel.active');
+  if (cur?.id === 'view-google') renderGoogle(w, isJuneOrLater);
+  if (cur?.id === 'view-meta')   renderMeta(w, isJuneOrLater);
+}
+
+/* ══════════════════════════════════════════
+   CHART ENGINE
+══════════════════════════════════════════ */
+function sparkLine(data, color, labels, unit, W, H, pL, pT, pB) {
+  W=W||240; H=H||60; pL=pL||0; pT=pT||4; pB=pB||18;
+  const vals = data.filter(v => v != null);
+  if (!vals.length) return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px"><text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="9" fill="#94a3b8">데이터 없음</text></svg>`;
+  const minV = Math.min(...vals)*0.92, maxV = Math.max(...vals)*1.06;
+  const n = data.length;
+  const xS = n > 1 ? (W-pL)/(n-1) : W/2;
+  const sY = v => pT + (H-pT-pB)*(1-(v-minV)/(maxV-minV));
+  const pts = data.map((v,i) => v!=null ? [pL+i*xS, sY(v)] : null);
+  let pathD='', areaD='', first=true, lastX=0, lastY=0;
+  pts.forEach((p) => {
+    if(!p) return;
+    if(first){pathD=`M${p[0]},${p[1]}`;areaD=`M${p[0]},${H-pB} L${p[0]},${p[1]}`;first=false;}
+    else{pathD+=` L${p[0]},${p[1]}`;areaD+=` L${p[0]},${p[1]}`;}
+    lastX=p[0]; lastY=p[1];
+  });
+  areaD += ` L${lastX},${H-pB} Z`;
+  const labelIdx = n>2 ? [0, Math.floor(n/2), n-1] : [0, n-1];
+  const xlbls = labelIdx.map(i => {
+    const lbl = labels?.[i]?.replace('W','') ?? '';
+    return `<text x="${pL+i*xS}" y="${H}" text-anchor="middle" font-size="8" fill="#7a8fa6">${lbl}</text>`;
+  }).join('');
+  const lastPt = pts.filter(Boolean).pop();
+  const dot = lastPt ? `<circle cx="${lastPt[0]}" cy="${lastPt[1]}" r="3" fill="${color}"/>` : '';
+  const uid = Math.random().toString(36).slice(2);
+  let hoverPts = '';
+  data.forEach((v, i) => {
+    const x = pL+i*xS;
+    if (v == null) {
+      hoverPts += `<circle cx="${x}" cy="${H-pB-2}" r="3" fill="#c0c8d8" opacity="0.8" class="hover-pt" data-val="데이터 없음" data-lbl="${labels?.[i]??''}" data-delta="—"/>`;
+      return;
+    }
+    const p = pts[i]; if(!p) return;
+    const prevV = data.slice(0,i).filter(x=>x!=null).pop();
+    const deltaStr = prevV != null ? ((v/prevV-1)*100).toFixed(1) : '—';
+    const sign = prevV!=null&&v>prevV ? '+' : '';
+    const dispVal = unit==='%' ? v.toFixed(1)+'%' : v>=10000 ? (v/10000).toFixed(1)+'만원' : v.toLocaleString('ko')+(unit==='원'?'원':'');
+    hoverPts += `<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="transparent" class="hover-pt" style="cursor:pointer" data-val="${dispVal}" data-lbl="${labels?.[i]??''}" data-delta="${deltaStr!=='—'?sign+deltaStr+'%':'—'}"/>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible">
+    <defs><linearGradient id="g${uid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${areaD}" fill="url(#g${uid})"/>
+    <path d="${pathD}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dot}${hoverPts}${xlbls}
+  </svg>`;
+}
+
+function fmtV(v, unit) {
+  if (v==null) return '—';
+  if (unit==='%') return v.toFixed(1)+'%';
+  if (v>=10000) return (v/10000).toFixed(1)+'만'+unit;
+  return Math.round(v).toLocaleString('ko')+unit;
+}
+function fmtDelta(curr, prev) {
+  if (!curr||!prev) return '';
+  const d=(curr/prev-1)*100;
+  return `<span style="color:#0f172a;font-size:9px">${d>0?'🔺':'🔻'}${Math.abs(d).toFixed(1)}%</span>`;
+}
+function N(v,u='') { return v==null?'—':Math.round(v).toLocaleString('ko')+u; }
+
+function make4Charts(containerID, srcKey, color, last12=true) {
+  const el = document.getElementById(containerID); if(!el) return;
+  let wks = WEEKS;
+  if (last12) wks = wks.slice(-12);
+  const labels = wks.map(w => w.label.split(' ')[0]);
+  const keys = ['cpm','ctr','cpi','cpa'];
+  const units = ['원','%','원','원'];
+  const mLabels = ['CPM','CTR','CPI','CPA'];
+  let html = '';
+  keys.forEach((key,ki) => {
+    const data = wks.map(w => {
+      const src = w[srcKey]; return src ? src[key] : null;
+    });
+    const valid = data.filter(v=>v!=null);
+    const curr = valid[valid.length-1];
+    const prev = valid.length>1 ? valid[valid.length-2] : null;
+    html += `<div class="chart4-card">
+      <div class="c4-label">${mLabels[ki]}</div>
+      <div class="c4-current">${fmtV(curr,units[ki])}</div>
+      <div class="c4-delta">${fmtDelta(curr,prev)} <span style="color:var(--t3);font-size:9px">vs 전주</span></div>
+      ${sparkLine(data, color, labels, units[ki])}
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function makeDailyCharts(containerID, dailyArr, color) {
+  const el = document.getElementById(containerID); if(!el) return;
+  if (!dailyArr || !dailyArr.length) { el.innerHTML='<div class="no-data-msg">이 주차의 일별 데이터가 없습니다</div>'; return; }
+  const labels = dailyArr.map(d => d.label);
+  const keys = ['cpm','ctr','cpi','cpa'];
+  const units = ['원','%','원','원'];
+  const mLabels = ['CPM','CTR','CPI','CPA'];
+  let html = '';
+  keys.forEach((key,ki) => {
+    const data = dailyArr.map(d => d[key]);
+    const valid = data.filter(v=>v!=null);
+    const curr = valid[valid.length-1];
+    const prev = valid.length>1 ? valid[valid.length-2] : null;
+    html += `<div class="chart4-card">
+      <div class="c4-label">${mLabels[ki]}</div>
+      <div class="c4-current">${fmtV(curr,units[ki])}</div>
+      <div class="c4-delta">${fmtDelta(curr,prev)} <span style="color:var(--t3);font-size:9px">vs 전일</span></div>
+      ${sparkLine(data, color, labels, units[ki])}
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function makeTopLowCharts(containerID, dailyArr) {
+  const el = document.getElementById(containerID); if(!el) return;
+  if (!dailyArr || !dailyArr.length) { el.innerHTML='<div class="no-data-msg">이 주차의 TOP/LOW 일별 데이터가 없습니다</div>'; return; }
+  const days = dailyArr.map(d => d.date);
+  const metrics = [{key:'cpm',label:'CPM',unit:'원'},{key:'ctr',label:'CTR',unit:'%'},{key:'cpi',label:'CPI',unit:'원'},{key:'cpa',label:'CPA',unit:'원'}];
+  let html = '';
+  metrics.forEach(m => {
+    const topD = dailyArr.map(d => d.top?.[m.key] ?? null);
+    const lowD = dailyArr.map(d => d.low?.[m.key] ?? null);
+    const W=240, H=80, pL=0, pT=4, pB=20;
+    const allV = [...topD,...lowD].filter(v=>v!=null);
+    if (!allV.length) { html+=`<div class="toplow-card"><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:8px">${m.label}</div><div style="color:var(--t3);font-size:10px">데이터 없음</div></div>`; return; }
+    const minV=Math.min(...allV)*0.9, maxV=Math.max(...allV)*1.08;
+    const n=dailyArr.length, xS=n>1?(W-pL)/(n-1):W/2;
+    const sY=v=>pT+(H-pT-pB)*(1-(v-minV)/(maxV-minV));
+    function buildLine(data, color) {
+      const pts = data.map((v,i)=>v!=null?[pL+i*xS,sY(v)]:null);
+      let d='',first=true;
+      pts.forEach(p=>{if(!p)return;if(first){d=`M${p[0]},${p[1]}`;first=false;}else d+=` L${p[0]},${p[1]}`;});
+      const lastP = pts.filter(Boolean).pop();
+      const dot = lastP?`<circle cx="${lastP[0]}" cy="${lastP[1]}" r="3" fill="${color}"/>`:'';
+      let hover='';
+      data.forEach((v,i)=>{
+        const p=pts[i]; if(!p) return;
+        const prevV=data.slice(0,i).filter(x=>x!=null).pop();
+        const dStr=prevV!=null?((v/prevV-1)*100).toFixed(1):'—';
+        const sign=prevV!=null&&v>prevV?'+':'';
+        const dispVal=m.unit==='%'?v.toFixed(1)+'%':v>=10000?(v/10000).toFixed(1)+'만원':v.toLocaleString('ko')+m.unit;
+        hover+=`<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="transparent" class="hover-pt" style="cursor:pointer" data-val="${dispVal}" data-lbl="${days[i]}" data-delta="${dStr!=='—'?sign+dStr+'%':'—'}"/>`;
+      });
+      return `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>${dot}${hover}`;
+    }
+    const xLabels = days.map((d,i)=>`<text x="${pL+i*xS}" y="${H}" text-anchor="middle" font-size="8" fill="#94a3b8">${d}</text>`).join('');
+    const topCurr=topD.filter(v=>v!=null).pop(), lowCurr=lowD.filter(v=>v!=null).pop();
+    html+=`<div class="toplow-card">
+      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">${m.label}</div>
+      <div style="display:flex;gap:10px;margin-bottom:6px">
+        <div><div style="font-size:9px;color:#e84545">TOP</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(topCurr,m.unit)}</div></div>
+        <div><div style="font-size:9px;color:#ff8c42">LOW</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(lowCurr,m.unit)}</div></div>
+      </div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible">
+        ${buildLine(topD,'#e84545')}
+        ${buildLine(lowD,'#ff8c42')}
+        ${xLabels}
+      </svg>
+      <div class="tl-legend">
+        <div class="tl-leg-item"><div class="tl-dot" style="background:#e84545"></div>TOP</div>
+        <div class="tl-leg-item"><div class="tl-dot" style="background:#ff8c42"></div>LOW</div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+/* ══════════════════════════════════════════
+   GET WEEK DAILY DATA
+══════════════════════════════════════════ */
+function getWeekDaily(dailyMap, ws, we) {
+  return Object.entries(dailyMap)
+    .filter(([d]) => d >= ws && d <= we)
+    .sort(([a],[b]) => a < b ? -1 : 1)
+    .map(([d, v]) => ({
+      label: fmtMMDD(d), date: d,
+      cpm: v.cpm, ctr: v.ctr, cpi: v.cpi, cpa: v.cpa,
+      cost: v.cost, install: v.install, contact: v.contact
+    }));
+}
+
+function getTopLowDaily(ws, we) {
+  const topDays = getWeekDaily(DAILY.top, ws, we);
+  const lowDays = getWeekDaily(DAILY.low, ws, we);
+  const allDates = [...new Set([...topDays.map(d=>d.date),...lowDays.map(d=>d.date)])].sort();
+  return allDates.map(d => ({
+    date: fmtMMDD(d), date_full: d,
+    top: topDays.find(x=>x.date===d) || {},
+    low: lowDays.find(x=>x.date===d) || {},
+  }));
+}
+
+/* ══════════════════════════════════════════
+   RENDER OVERVIEW
+══════════════════════════════════════════ */
+function renderOverview(w, isJuneOrLater) {
+  const prev = curIdx > 0 ? WEEKS[curIdx-1] : null;
+  const startIdx = Math.max(0, curIdx-4);
+  let avg4 = {cost:0,install:0,contact:0,cnt:0};
+  for (let i=startIdx; i<curIdx; i++) {
+    const pw = WEEKS[i];
+    avg4.cost    += (pw.gt?.cost||0)+(pw.gi?.cost||0)+(pw.fbi?.cost||0);
+    avg4.install += (pw.gt?.install||0)+(pw.gi?.install||0)+(pw.fbi?.install||0);
+    avg4.contact += (pw.gt?.contact||0)+(pw.gi?.contact||0)+(pw.fbi?.contact||0);
+    avg4.cnt++;
+  }
+  const a4i = avg4.cnt > 0 ? avg4.install/avg4.cnt : null;
+  const a4c = avg4.cnt > 0 ? avg4.contact/avg4.cnt : null;
+  const a4s = avg4.cnt > 0 ? avg4.cost/avg4.cnt : null;
+  
+  const curInst  = (w.gt?.install||0)+(w.gi?.install||0)+(w.fbi?.install||0);
+  const curCont  = (w.gt?.contact||0)+(w.gi?.contact||0)+(w.fbi?.contact||0);
+  const curCost  = (w.gt?.cost||0)+(w.gi?.cost||0)+(w.fbi?.cost||0);
+  const curCPI   = curInst>0 ? Math.round(curCost/curInst) : null;
+  const curCPA   = curCont>0 ? Math.round(curCost/curCont) : null;
+  const prevInst = prev ? (prev.gt?.install||0)+(prev.gi?.install||0)+(prev.fbi?.install||0) : null;
+  const prevCont = prev ? (prev.gt?.contact||0)+(prev.gi?.contact||0)+(prev.fbi?.contact||0) : null;
+  const prevCost = prev ? (prev.gt?.cost||0)+(prev.gi?.cost||0)+(prev.fbi?.cost||0) : null;
+  const prevCPI  = prevInst>0 ? Math.round(prevCost/prevInst) : null;
+  const prevCPA  = prevCont>0 ? Math.round(prevCost/prevCont) : null;
+  const a4CPI    = a4i>0 ? Math.round(a4s/a4i) : null;
+  const a4CPA    = a4c>0 ? Math.round(a4s/a4c) : null;
+
+  function wowHtml(curr, prev, label) {
+    if (!curr||!prev||prev===0) return '';
+    const d=(curr/prev-1)*100;
+    const arr=d>0?'🔺':'🔻';
+    return `<div class="wow-dr"><span class="wow-dl">${label}</span><span class="wow-dv">${arr}${d>0?'+':''}${d.toFixed(1)}%</span></div>`;
+  }
+
+  const wowCards = [
+    { lbl:'Total Install', val:N(curInst)+'건',
+      d1:prev?`vs 전주 ${N(prevInst)}건`:'', v1:wowHtml(curInst,prevInst,''),
+      d2:a4i?`vs 4주주평균 ${Math.round(a4i).toLocaleString('ko')}건`:'', v2:wowHtml(curInst,a4i,'') },
+    { lbl:'CONTACT', val:N(curCont)+'건',
+      d1:prev?`vs 전주 ${N(prevCont)}건`:'', v1:wowHtml(curCont,prevCont,''),
+      d2:a4c?`vs 4주주평균 ${Math.round(a4c).toLocaleString('ko')}건`:'', v2:wowHtml(curCont,a4c,'') },
+    { lbl:'CPI (전 매체 합산)', val:curCPI?N(curCPI)+'원':'—',
+      d1:prev?`vs 전주 ${prevCPI?N(prevCPI)+'원':'—'}`:'', v1:wowHtml(curCPI,prevCPI,''),
+      d2:a4CPI?`vs 4주평균 ${N(a4CPI)}원`:'', v2:wowHtml(curCPI,a4CPI,'') },
+    { lbl:'CPA (전 매체 합산)', val:curCPA?N(curCPA)+'원':'—',
+      d1:prev?`vs 전주 ${prevCPA?N(prevCPA)+'원':'—'}`:'', v1:wowHtml(curCPA,prevCPA,''),
+      d2:a4CPA?`vs 4주평균 ${N(a4CPA)}원`:'', v2:wowHtml(curCPA,a4CPA,'') },
+  ];
+
+  // 캠페인 테이블
+  const fbcDaily = isJuneOrLater ? getWeekDaily(DAILY.fbc, w.week_start, w.week_end) : [];
+  const topDaily = isJuneOrLater ? getWeekDaily(DAILY.top, w.week_start, w.week_end) : [];
+  const lowDaily = isJuneOrLater ? getWeekDaily(DAILY.low, w.week_start, w.week_end) : [];
+  let fbcCost=0,fbcInst=0,fbcCont=0; fbcDaily.forEach(d=>{fbcCost+=d.cost;fbcInst+=d.install;fbcCont+=d.contact;});
+  let topCost=0,topInst=0,topCont=0; topDaily.forEach(d=>{topCost+=d.cost;topInst+=d.install;topCont+=d.contact;});
+  let lowCost=0,lowInst=0,lowCont=0; lowDaily.forEach(d=>{lowCost+=d.cost;lowInst+=d.install;lowCont+=d.contact;});
+  const fbcCPI=fbcInst>0?Math.round(fbcCost/fbcInst):null, fbcCPA=fbcCont>0?Math.round(fbcCost/fbcCont):null;
+  const topCPI=topInst>0?Math.round(topCost/topInst):null, topCPA=topCont>0?Math.round(topCost/topCont):null;
+  const lowCPI=lowInst>0?Math.round(lowCost/lowInst):null, lowCPA=lowCont>0?Math.round(lowCost/lowCont):null;
+
+  // 6월 이전: GI, GT(전체), FBI만
+  let campRows = [];
+  if (isJuneOrLater) {
+    campRows = [
+      {nm:'G.tROAS_TOP',tag:'신규',type:'GT',cost:topCost,inst:topInst,cont:topCont,cpi:topCPI,cpa:topCPA,cpm:w.gt?.cpm,ctr:w.gt?.ctr,badge:'ob-wn',label:'⚠ 모니터링'},
+      {nm:'G.tROAS_LOW',tag:'신규',type:'GT',cost:lowCost,inst:lowInst,cont:lowCont,cpi:lowCPI,cpa:lowCPA,cpm:w.gt?.cpm,ctr:w.gt?.ctr,badge:'ob-wn',label:'⚠ 모니터링'},
+      {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,badge:'ob-ok',label:'✓ 정상'},
+      {nm:'FB_Install',tag:'재라이브',type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,badge:'ob-bd',label:'🔴 주의'},
+      {nm:'FB_CPA',tag:'신규',type:'META',cost:fbcCost,inst:fbcInst,cont:fbcCont,cpi:fbcCPI,cpa:fbcCPA,cpm:null,ctr:null,badge:'ob-bd',label:'🔴 주의'},
+    ];
+  } else {
+    campRows = [
+      {nm:'G.tROAS(전체)',tag:null,type:'GT',cost:w.gt?.cost,inst:w.gt?.install,cont:w.gt?.contact,cpi:w.gt?.cpi,cpa:w.gt?.cpa,cpm:w.gt?.cpm,ctr:w.gt?.ctr,badge:'ob-ok',label:''},
+      {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,badge:'ob-ok',label:''},
+      {nm:'FB_Install',tag:null,type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,badge:'ob-ok',label:''},
+    ];
+  }
+
+  const cpiCls = (v, thr) => !v?'td-r':v<=thr?'td-ok':v>thr*1.15?'td-bd':'td-wn';
+
+  document.getElementById('overview-content').innerHTML = `
+    <div class="sec"><span class="sec-accent">WoW</span> 볼륨 &amp; 효율 — 전 매체 합산</div>
+    <div class="g4 mb12">
+      ${wowCards.map(c=>`<div class="wow-card">
+        <div class="wow-lbl">${c.lbl}</div>
+        <div class="wow-val">${c.val}</div>
+        <div class="wow-deltas">
+          ${prev&&c.d1?`<div class="wow-dr"><span class="wow-dl">${c.d1}</span><span class="wow-dv">${c.v1.match(/>[^<]+</)?c.v1.match(/>[^<]+</)[0].slice(1,-1):''}</span></div>`:''}
+          ${a4i&&c.d2?`<div class="wow-dr"><span class="wow-dl">${c.d2}</span><span class="wow-dv">${c.v2.match(/>[^<]+</)?c.v2.match(/>[^<]+</)[0].slice(1,-1):''}</span></div>`:''}
+        </div>
+      </div>`).join('')}
+    </div>
+    <div class="sec"><span class="sec-accent">Campaign</span> 캠페인별 주간 효율</div>
+    <div class="card mb12">
+      <div class="ct">매체별 ${w.label} 지표</div>
+      <div class="cs">CPA = Cost ÷ CONTACT · CTR 소수점 1자리</div>
+      <table class="tbl">
+        <thead><tr><th>캠페인</th><th>유형</th><th class="r">Cost</th><th class="r">Install</th><th class="r">CPI</th><th class="r">Contact</th><th class="r">CPA</th><th class="r">CPM</th><th class="r">CTR</th>${isJuneOrLater?'<th>판정</th>':''}</tr></thead>
+        <tbody>
+          ${campRows.map(r=>`<tr>
+            <td class="cnm">${r.nm}${r.tag?`<span class="tag tag-new">${r.tag}</span>`:''}</td>
+            <td style="font-size:9px;color:var(--t3)">${r.type}</td>
+            <td class="td-r">${r.cost?Math.round(r.cost).toLocaleString('ko'):'—'}</td>
+            <td class="td-r">${r.inst!=null?Math.round(r.inst).toLocaleString('ko'):'—'}</td>
+            <td class="${cpiCls(r.cpi,r.type==='META'?1700:2000)}">${r.cpi?r.cpi.toLocaleString('ko')+'원':'—'}</td>
+            <td class="td-r">${r.cont!=null?Math.round(r.cont)+'건':'—'}</td>
+            <td class="${r.cpa&&r.cpa<50000?'td-ok':'td-r'}">${r.cpa?r.cpa.toLocaleString('ko')+'원':'—'}</td>
+            <td class="td-r">${r.cpm?r.cpm.toLocaleString('ko'):'—'}</td>
+            <td class="td-r">${r.ctr!=null?r.ctr.toFixed(1)+'%':'—'}</td>
+            ${isJuneOrLater&&r.label?`<td><span class="ob ${r.badge}">${r.label}</span></td>`:(isJuneOrLater?'<td></td>':'')}
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  // WoW 수치 직접 채우기 (innerHTML regex 방식 대신)
+  const cards2 = document.querySelectorAll('#overview-content .wow-card');
+  const rawData = [
+    {curr:curInst, prev:prevInst, a4:a4i},
+    {curr:curCont, prev:prevCont, a4:a4c},
+    {curr:curCPI,  prev:prevCPI,  a4:a4CPI},
+    {curr:curCPA,  prev:prevCPA,  a4:a4CPA},
+  ];
+  cards2.forEach((card,i) => {
+    const r = rawData[i];
+    const deltas = card.querySelector('.wow-deltas');
+    const rows = deltas ? deltas.querySelectorAll('.wow-dr') : [];
+    rows.forEach(row => {
+      const vEl = row.querySelector('.wow-dv');
+      if (!vEl) return;
+      const label = row.querySelector('.wow-dl')?.textContent || '';
+      const isA4 = label.includes('4주');
+      const ref = isA4 ? r.a4 : r.prev;
+      if (!r.curr || !ref || ref===0) { vEl.textContent='—'; return; }
+      const d=(r.curr/ref-1)*100;
+      vEl.textContent = `${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%`;
+    });
+  });
+}
+
+/* ══════════════════════════════════════════
+   RENDER GOOGLE
+══════════════════════════════════════════ */
+function renderGoogle(w, isJuneOrLater) {
+  const topLowDaily = isJuneOrLater ? getTopLowDaily(w.week_start, w.week_end) : [];
+  const tlLabel = isJuneOrLater
+    ? `Daily · ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)}`
+    : '6월 이후 데이터부터 제공';
+
+  document.getElementById('google-content').innerHTML = `
+    <div class="role-grid">
+      <div class="role-side inst">
+        <div class="role-lbl">Install Volume Campaign</div>
+        <div class="role-name">G.UAC (GI)</div>
+        <div class="role-desc">t.CPI 최적화 · 넓은 유저 풀 · 인스톨 수량 극대화</div>
+        <div class="role-kpi">핵심 KPI: CPI ≤ 2,000원 · CTR ≥ 0.85%</div>
+      </div>
+      <div class="role-side cpa">
+        <div class="role-lbl">CPA Conversion Campaign</div>
+        <div class="role-name">G.tROAS_TOP · G.tROAS_LOW</div>
+        <div class="role-desc">고의도 유저 타겟 · CTB(Contact) 전환 극대화</div>
+        <div class="role-kpi">핵심 KPI: CPA(Contact) · Contact 일평균 ≥ 10건</div>
+      </div>
+    </div>
+    <div class="sec"><span class="sec-accent">GI</span> G.UAC — CPM · CTR · CPI · CPA <span class="sec-sub">최근 12주 Weekly</span></div>
+    <div class="chart4-row" id="gi-charts"></div>
+    <div class="sec"><span class="sec-accent">GT</span> G.tROAS 전체 — CPM · CTR · CPI · CPA <span class="sec-sub">최근 12주 Weekly</span></div>
+    <div class="chart4-row" id="gt-charts"></div>
+    <div class="sec"><span class="sec-accent">GT</span> tROAS_TOP vs LOW 비교 <span class="sec-sub">${tlLabel}</span></div>
+    <div class="toplow-row" id="toplow-charts"></div>`;
+
+  make4Charts('gi-charts', 'gi', '#465fff');
+  make4Charts('gt-charts', 'gt', '#ff46c4');
+  makeTopLowCharts('toplow-charts', topLowDaily);
+}
+
+/* ══════════════════════════════════════════
+   RENDER META
+══════════════════════════════════════════ */
+function renderMeta(w, isJuneOrLater) {
+  const fbcDaily = isJuneOrLater ? getWeekDaily(DAILY.fbc, w.week_start, w.week_end) : [];
+  const hierWeekKey = isJuneOrLater ? w.week_start : null;
+
+  document.getElementById('meta-content').innerHTML = `
+    <div class="role-grid">
+      <div class="role-side inst">
+        <div class="role-lbl">Install Volume Campaign</div>
+        <div class="role-name">FB_Install (재라이브)</div>
+        <div class="role-desc">앱 설치 최적화 · CPI 중심 · 광범위 유저 유입</div>
+        <div class="role-kpi">핵심 KPI: CPI ≤ 1,700원 · CTR ≥ 1.0%</div>
+      </div>
+      <div class="role-side cpa">
+        <div class="role-lbl">CPA Conversion Campaign</div>
+        <div class="role-name">FB_CPA</div>
+        <div class="role-desc">전환 이벤트 최적화 · Contact/DB 극대화 · 고의도 타겟</div>
+        <div class="role-kpi">핵심 KPI: CPA(Contact) · 7일 누적 Contact ≥ 20건</div>
+      </div>
+    </div>
+    <div class="sec"><span class="sec-accent">Install</span> FB_Install — CPM · CTR · CPI · CPA <span class="sec-sub">최근 12주 Weekly</span></div>
+    <div class="chart4-row" id="fbi-charts"></div>
+    <div class="sec"><span class="sec-accent">CPA</span> FB_CPA — CPM · CTR · CPI · CPA <span class="sec-sub">${isJuneOrLater?`Daily · ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)} · 6월 신규 라이브`:'6월 이후 데이터부터 제공'}</span></div>
+    <div class="chart4-row" id="fbc-charts"></div>
+    ${isJuneOrLater ? `
+    <div class="sec"><span class="sec-accent">Insight</span> 광고세트 효율 &amp; 액션 아이템</div>
+    <div class="insight-panel" id="insight-panel"></div>
+    <div class="sec"><span class="sec-accent">Asset</span> 소재 단위 계층형 효율 <span class="sec-sub">${w.label} 누계 · FB소재별 엑셀 기준</span></div>
+    <div class="card mb12">
+      <div class="ct">캠페인 > 광고세트 > 소재</div>
+      <div class="cs">🟢 Contact 1건↑ or CPI 세트평균 이하 · 🟡 CPI +30% 이내 · 🔴 CPI +30% 초과 AND Contact 0 AND 소진 10,000원↑</div>
+      <table class="hier-tbl">
+        <thead><tr><th style="width:38%">캠페인/광고세트/소재</th><th class="r">소진</th><th class="r">Install</th><th class="r">CPI</th><th class="r">Contact</th><th class="r">CPA</th><th class="r">CPM</th><th class="r">CTR</th><th>판정</th></tr></thead>
+        <tbody id="hier-body"></tbody>
+      </table>
+    </div>` : '<div class="no-data-msg" style="padding:24px 0">6월 이전 주차에는 소재별 데이터가 제공되지 않습니다</div>'}`;
+
+  make4Charts('fbi-charts', 'fbi', '#465fff');
+  makeDailyCharts('fbc-charts', fbcDaily, '#ff46c4');
+
+  if (isJuneOrLater) {
+    renderInsight(w.week_start);
+    renderHier(w.week_start);
+  }
+}
+
+/* ══════════════════════════════════════════
+   RENDER INSIGHT
+══════════════════════════════════════════ */
+function renderInsight(weekKey) {
+  const hier = HIER_DATA[weekKey];
+  if (!hier) { document.getElementById('insight-panel').innerHTML='<div class="no-data-msg">이 주차의 소재 데이터가 없습니다</div>'; return; }
+  const conv = hier['chut_app_conversion (aos)'] || {};
+  const inst = hier['chut_app_install (aos)'] || {};
+  const fbcMul = conv['매물형'] || {};
+  const fbcRls = conv['매물형_릴스'] || {};
+  const fbiMul = inst['매물형'] || {};
+  const fbiBrnd = inst['브랜딩형'] || {};
+
+  const rows = [
+    { lbl:'FB_CPA · 매물형', sub:'chut_app_conversion · CPA 기준', data:fbcMul, action:'↑ 예산 확대', acls:'a-up', hi:false },
+    { lbl:'FB_CPA · 매물형_릴스', sub:'chut_app_conversion', data:fbcRls, action:'↓ 예산 축소', acls:'a-cut', hi:false },
+    { lbl:'FB_Install · 브랜딩형', sub:'chut_app_install · CPI+CTR 기준', data:fbiBrnd, action:'↑ 예산 확대', acls:'a-up', hi:true },
+    { lbl:'FB_Install · 매물형', sub:'chut_app_install', data:fbiMul, action:'↓ 예산 축소', acls:'a-cut', hi:false },
+  ];
+
+  const el = document.getElementById('insight-panel'); if(!el) return;
+  el.innerHTML = `<div class="ip-hd">📊 광고세트 효율 비교 — 액션 우선순위 (${weekKey.slice(5)} 주차 누계)</div>
+  ${rows.map(r=>`<div class="ip-row"${r.hi?' style="background:rgba(0,171,255,.04)"':''}>
+    <div><div class="ip-lbl">${r.lbl}</div><div class="ip-sub">${r.sub}</div></div>
+    <div>
+      <div class="ip-metrics">
+        <span class="ip-m">Cost <strong>${N(r.data.cost)}</strong></span>
+        <span class="ip-m">Install <strong>${N(r.data.install)}건</strong></span>
+        <span class="ip-m">CPI <strong style="color:${r.data.cpi&&r.data.cpi<3500?'#00ABFF':'#ff4668'}">${N(r.data.cpi)}원</strong></span>
+        <span class="ip-m">Contact <strong>${N(r.data.contact)}건</strong></span>
+        <span class="ip-m">CPA <strong style="color:${!r.data.cpa||r.data.cpa<200000?'#00ABFF':'#ff4668'}">${N(r.data.cpa)}원</strong></span>
+        <span class="ip-m">CPM <strong>${N(r.data.cpm)}원</strong></span>
+        <span class="ip-m">CTR <strong>${r.data.ctr?r.data.ctr.toFixed(1)+'%':'—'}</strong></span>
+      </div>
+    </div>
+    <div><span class="action-btn ${r.acls}">${r.action}</span></div>
+  </div>`).join('')}`;
+}
+
+/* ══════════════════════════════════════════
+   RENDER HIER
+══════════════════════════════════════════ */
+function renderHier(weekKey) {
+  const hier = HIER_DATA[weekKey];
+  const el = document.getElementById('hier-body'); if(!el) return;
+  if (!hier) { el.innerHTML='<tr><td colspan="9" class="no-data-msg">이 주차의 소재 데이터가 없습니다</td></tr>'; return; }
+  
+  const FB = f => ({keep:'<span class="fk">🟢 유지</span>',watch:'<span class="fw">🟡 관망</span>',replace:'<span class="fr">🔴 교체</span>'}[f]||'—');
+  let h='';
+  Object.entries(hier).forEach(([camp,adsets],ci)=>{
+    if (Object.values(adsets).every(a=>!a.cost)) return;
+    const cid='c'+ci;
+    let cc=0,ci2=0,cct=0;
+    Object.values(adsets).forEach(a=>{cc+=a.cost;ci2+=a.install;cct+=a.contact;});
+    const cCPI=ci2>0?Math.round(cc/ci2):null, cCPA=cct>0?Math.round(cc/cct):null;
+    h+=`<tr class="cr expanded" onclick="tg('${cid}',this)"><td><span class="ex">▶</span>${camp}</td><td class="r">${N(cc)}</td><td class="r">${N(ci2)}</td><td class="r">${N(cCPI,'원')}</td><td class="r">${N(cct)}</td><td class="r">${N(cCPA,'원')}</td><td class="r">—</td><td class="r">—</td><td></td></tr>`;
+    Object.entries(adsets).forEach(([adset,a],ai)=>{
+      if (!a.cost) return;
+      const aid=cid+'a'+ai;
+      h+=`<tr class="ar expanded" data-p="${cid}" onclick="tg('${aid}',this)"><td><span class="ex">▶</span>${adset}</td><td class="r">${N(a.cost)}</td><td class="r">${N(a.install)}</td><td class="r">${N(a.cpi,'원')}</td><td class="r">${N(a.contact)}</td><td class="r">${N(a.cpa,'원')}</td><td class="r">${N(a.cpm,'원')}</td><td class="r">${a.ctr?a.ctr.toFixed(2)+'%':'—'}</td><td></td></tr>`;
+      (a.ads||[]).forEach(ad=>{
+        h+=`<tr class="dr" data-p="${aid}"><td>${ad.name}</td><td class="r">${N(ad.cost)}</td><td class="r">${N(ad.install)}</td><td class="r">${N(ad.cpi,'원')}</td><td class="r">${N(ad.contact)}</td><td class="r">${N(ad.cpa,'원')}</td><td class="r">${N(ad.cpm,'원')}</td><td class="r">${ad.ctr?ad.ctr.toFixed(2)+'%':'—'}</td><td>${FB(ad.flag)}</td></tr>`;
+      });
+    });
+  });
+  el.innerHTML = h;
+}
+
+function tg(id,el) {
+  const rows=document.querySelectorAll(`[data-p="${id}"]`);
+  const exp=el.classList.contains('expanded');
+  rows.forEach(r=>{
+    r.style.display=exp?'none':'';
+    if(exp){const m=(r.getAttribute('onclick')||'').match(/'([^']+)'/);if(m){document.querySelectorAll(`[data-p="${m[1]}"]`).forEach(cr=>cr.style.display='none');const ct=document.querySelector(`[onclick="tg('${m[1]}',this)"]`);if(ct)ct.classList.remove('expanded');}}
+  });
+  el.classList.toggle('expanded',!exp);
+}
+
+/* ══════════════════════════════════════════
+   NAV
+══════════════════════════════════════════ */
+function nav(v,el) {
+  document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  el.classList.add('active');
+  const t={overview:'Overview',google:'Google Ads',meta:'META'};
+  document.getElementById('ph-title').textContent=t[v]||'';
+  if (!dataLoaded) return;
+  const w=WEEKS[curIdx]; const isJ=w.week_start>='2026-06-01';
+  if (v==='google') renderGoogle(w,isJ);
+  if (v==='meta')   renderMeta(w,isJ);
+}
+
+/* ══════════════════════════════════════════
+   TOOLTIP
+══════════════════════════════════════════ */
+document.addEventListener('mousemove', function(e) {
+  const pt = e.target.closest?.('.hover-pt');
+  const tip = document.getElementById('chart-tooltip');
+  if (!tip) return;
+  if (pt) {
+    const v=pt.getAttribute('data-val'), lbl=pt.getAttribute('data-lbl'), delta=pt.getAttribute('data-delta');
+    const isPos=delta?.startsWith('+'), isNeg=delta?.startsWith('-');
+    const arr=isPos?'🔺':(isNeg?'🔻':'');
+    const dNum=delta&&delta!=='—'?delta.replace(/[+-]/,''):delta;
+    tip.style.display='block';
+    tip.innerHTML=`<span style="color:#7a8fa6;font-size:9px">${lbl}</span>&nbsp;&nbsp;<strong style="font-size:11px">${v}</strong>&nbsp;&nbsp;<span style="font-size:10px;color:#0f172a">${arr}${dNum!=='—'?dNum:'—'}</span>`;
+    const tw=tip.offsetWidth, th=tip.offsetHeight;
+    let left=e.clientX-tw/2, top=e.clientY-th-12;
+    if(left<8)left=8;
+    if(left+tw>window.innerWidth-8)left=window.innerWidth-tw-8;
+    if(top<8)top=e.clientY+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+  } else {
+    tip.style.display='none';
+  }
+});
+
+/* INIT */
+loadData();
+</script>
+</body>
+</html>
