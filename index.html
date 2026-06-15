@@ -355,7 +355,7 @@ function convertRow(arr) {
   const [cost, imps, clicks, install, contact, ctrRaw, cpmRaw] = arr;
   // Apps Script 컬럼: COL_CTR=8(소수값 예:0.0081), COL_INSTALL=13(Install[new]), COL_CONTACT=18
   // ctrRaw: % 단위로 전달됨 (예: 0.81) → 소수점 1자리로 표기
-  const ctr = (ctrRaw != null && ctrRaw > 0) ? parseFloat(Number(ctrRaw).toFixed(1)) : null;
+  const ctr = (ctrRaw != null && ctrRaw > 0) ? parseFloat(Number(ctrRaw).toFixed(2)) : null;
   // cpm: Apps Script에서 직접 계산 전달, 없으면 imps로 계산
   const cpm = (cpmRaw != null && cpmRaw > 0) ? Math.round(cpmRaw) :
               (imps > 0 ? Math.round(cost / imps * 1000) : null);
@@ -396,7 +396,7 @@ function aggregateWeekly(daily) {
     result[ws] = {
       cost: Math.round(w.cost), install: Math.round(w.install), contact: Math.round(w.contact),
       cpm:  w.imps   > 0 ? Math.round(w.cost / w.imps * 1000) : null,
-      ctr:  w.imps   > 0 ? parseFloat((w.clicks / w.imps * 100).toFixed(1)) : null,
+      ctr:  w.imps   > 0 ? parseFloat((w.clicks / w.imps * 100).toFixed(2)) : null,
       cpi:  w.install> 0 ? Math.round(w.cost / w.install) : null,
       cpa:  w.contact> 0 ? Math.round(w.cost / w.contact) : null,
     };
@@ -579,7 +579,7 @@ function sparkLine(data, color, labels, unit, W, H, pL, pT, pB) {
     const prevV = data.slice(0,i).filter(x=>x!=null).pop();
     const deltaStr = prevV != null ? ((v/prevV-1)*100).toFixed(1) : '—';
     const sign = prevV!=null&&v>prevV ? '+' : '';
-    const dispVal = unit==='%' ? v.toFixed(1)+'%' : v>=10000 ? (v/10000).toFixed(1)+'만원' : v.toLocaleString('ko')+(unit==='원'?'원':'');
+    const dispVal = unit==='%' ? v.toFixed(2)+'%' : v>=10000 ? (v/10000).toFixed(1)+'만원' : v.toLocaleString('ko')+(unit==='원'?'원':'');
     hoverPts += `<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="transparent" class="hover-pt" style="cursor:pointer" data-val="${dispVal}" data-lbl="${labels?.[i]??''}" data-delta="${deltaStr!=='—'?sign+deltaStr+'%':'—'}"/>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible">
@@ -595,7 +595,7 @@ function sparkLine(data, color, labels, unit, W, H, pL, pT, pB) {
 
 function fmtV(v, unit) {
   if (v==null) return '—';
-  if (unit==='%') return v.toFixed(1)+'%';
+  if (unit==='%') return v.toFixed(2)+'%';
   if (v>=10000) return (v/10000).toFixed(1)+'만'+unit;
   return Math.round(v).toLocaleString('ko')+unit;
 }
@@ -906,7 +906,7 @@ function renderOverview(w, isJuneOrLater) {
             <td class="td-r">${r.cont!=null?Math.round(r.cont)+'건':'—'}</td>
             <td class="${cpiColorCls(r.cpa,r.prevCpa)}">${r.cpa?r.cpa.toLocaleString('ko')+'원':'—'}</td>
             <td class="td-r">${r.cpm?r.cpm.toLocaleString('ko'):'—'}</td>
-            <td class="td-r">${r.ctr!=null?r.ctr.toFixed(1)+'%':'—'}</td>
+            <td class="td-r">${r.ctr!=null?r.ctr.toFixed(2)+'%':'—'}</td>
             ${isJuneOrLater&&r.label?`<td><span class="ob ${r.badge}">${r.label}</span></td>`:(isJuneOrLater?'<td></td>':'')}
           </tr>`).join('')}
         </tbody>
