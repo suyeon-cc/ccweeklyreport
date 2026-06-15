@@ -545,7 +545,9 @@ function sparkLine(data, color, labels, unit, W, H, pL, pT, pB) {
   W=W||240; H=H||60; pL=pL||0; pT=pT||4; pB=pB||18;
   const vals = data.filter(v => v != null);
   if (!vals.length) return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px"><text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="9" fill="#94a3b8">데이터 없음</text></svg>`;
-  const minV = Math.min(...vals)*0.92, maxV = Math.max(...vals)*1.06;
+  const rawMin = Math.min(...vals), rawMax = Math.max(...vals);
+  const pad = (rawMax - rawMin) * 0.5 || rawMax * 0.08;
+  const minV = rawMin - pad, maxV = rawMax + pad;
   const n = data.length;
   const xS = n > 1 ? (W-pL)/(n-1) : W/2;
   const sY = v => pT + (H-pT-pB)*(1-(v-minV)/(maxV-minV));
@@ -672,7 +674,9 @@ function makeTopLowCharts(containerID, dailyArr) {
     const W=240, H=80, pL=0, pT=4, pB=20;
     const allV = [...topD,...lowD].filter(v=>v!=null);
     if (!allV.length) { html+=`<div class="toplow-card"><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:8px">${m.label}</div><div style="color:var(--t3);font-size:10px">데이터 없음</div></div>`; return; }
-    const minV=Math.min(...allV)*0.9, maxV=Math.max(...allV)*1.08;
+    const rawMinV=Math.min(...allV), rawMaxV=Math.max(...allV);
+    const padV=(rawMaxV-rawMinV)*0.5||rawMaxV*0.08;
+    const minV=rawMinV-padV, maxV=rawMaxV+padV;
     const n=dailyArr.length, xS=n>1?(W-pL)/(n-1):W/2;
     const sY=v=>pT+(H-pT-pB)*(1-(v-minV)/(maxV-minV));
     function buildLine(data, color) {
