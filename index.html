@@ -765,7 +765,13 @@ function renderOverview(w, isJuneOrLater) {
     return `<div class="wow-dr"><span class="wow-dl">${label}</span><span class="wow-dv">${arr}${d>0?'+':''}${d.toFixed(1)}%</span></div>`;
   }
 
+  const a4cost = avg4.cnt > 0 ? avg4.cost/avg4.cnt : null;
+  const prevCost2 = prev ? (prev.gt?.cost||0)+(prev.gi?.cost||0)+(prev.fbi?.cost||0) : null;
+
   const wowCards = [
+    { lbl:'Total Cost', val:curCost?Math.round(curCost).toLocaleString('ko')+'원':'—',
+      d1:prev?`vs 전주 ${prevCost2?Math.round(prevCost2).toLocaleString('ko')+'원':'—'}`:'', v1:wowHtml(curCost,prevCost2,''),
+      d2:a4cost?`vs 4주주평균 ${Math.round(a4cost).toLocaleString('ko')}원`:'', v2:wowHtml(curCost,a4cost,'') },
     { lbl:'Total Install', val:N(curInst)+'건',
       d1:prev?`vs 전주 ${N(prevInst)}건`:'', v1:wowHtml(curInst,prevInst,''),
       d2:a4i?`vs 4주주평균 ${Math.round(a4i).toLocaleString('ko')}건`:'', v2:wowHtml(curInst,a4i,'') },
@@ -794,27 +800,47 @@ function renderOverview(w, isJuneOrLater) {
   // 6월 이전: GI, GT(전체), FBI만
   let campRows = [];
   if (isJuneOrLater) {
+    // 전주 TOP/LOW daily 합산
+    const prevTopDaily = curIdx>0 ? getWeekDaily(DAILY.top, WEEKS[curIdx-1].week_start, WEEKS[curIdx-1].week_end) : [];
+    const prevLowDaily = curIdx>0 ? getWeekDaily(DAILY.low, WEEKS[curIdx-1].week_start, WEEKS[curIdx-1].week_end) : [];
+    const prevFbcDaily = curIdx>0 ? getWeekDaily(DAILY.fbc, WEEKS[curIdx-1].week_start, WEEKS[curIdx-1].week_end) : [];
+    let ptCost=0,ptInst=0; prevTopDaily.forEach(d=>{ptCost+=d.cost;ptInst+=d.install;});
+    let plCost=0,plInst=0; prevLowDaily.forEach(d=>{plCost+=d.cost;plInst+=d.install;});
+    let pfcCost=0,pfcInst=0; prevFbcDaily.forEach(d=>{pfcCost+=d.cost;pfcInst+=d.install;});
+    const prevTopCPI = ptInst>0?Math.round(ptCost/ptInst):null;
+    const prevLowCPI = plInst>0?Math.round(plCost/plInst):null;
+    const prevFbcCPI = pfcInst>0?Math.round(pfcCost/pfcInst):null;
+
     campRows = [
-      {nm:'G.tROAS_TOP',tag:'신규',type:'GT',cost:topCost,inst:topInst,cont:topCont,cpi:topCPI,cpa:topCPA,cpm:w.gt?.cpm,ctr:w.gt?.ctr,badge:'ob-wn',label:'⚠ 모니터링'},
-      {nm:'G.tROAS_LOW',tag:'신규',type:'GT',cost:lowCost,inst:lowInst,cont:lowCont,cpi:lowCPI,cpa:lowCPA,cpm:w.gt?.cpm,ctr:w.gt?.ctr,badge:'ob-wn',label:'⚠ 모니터링'},
-      {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,badge:'ob-ok',label:'✓ 정상'},
-      {nm:'FB_Install',tag:'재라이브',type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,badge:'ob-bd',label:'🔴 주의'},
-      {nm:'FB_CPA',tag:'신규',type:'META',cost:fbcCost,inst:fbcInst,cont:fbcCont,cpi:fbcCPI,cpa:fbcCPA,cpm:null,ctr:null,badge:'ob-bd',label:'🔴 주의'},
+      {nm:'G.tROAS_TOP',tag:'신규',type:'GT',cost:topCost,inst:topInst,cont:topCont,cpi:topCPI,cpa:topCPA,cpm:w.gt?.cpm,ctr:w.gt?.ctr,prevCpi:prevTopCPI,prevCpa:null,badge:'ob-wn',label:'⚠ 모니터링'},
+      {nm:'G.tROAS_LOW',tag:'신규',type:'GT',cost:lowCost,inst:lowInst,cont:lowCont,cpi:lowCPI,cpa:lowCPA,cpm:w.gt?.cpm,ctr:w.gt?.ctr,prevCpi:prevLowCPI,prevCpa:null,badge:'ob-wn',label:'⚠ 모니터링'},
+      {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,prevCpi:prevGI?.cpi,prevCpa:prevGI?.cpa,badge:'ob-ok',label:'✓ 정상'},
+      {nm:'FB_Install',tag:'재라이브',type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,prevCpi:prevFBI?.cpi,prevCpa:prevFBI?.cpa,badge:'ob-bd',label:'🔴 주의'},
+      {nm:'FB_CPA',tag:'신규',type:'META',cost:fbcCost,inst:fbcInst,cont:fbcCont,cpi:fbcCPI,cpa:fbcCPA,cpm:null,ctr:null,prevCpi:prevFbcCPI,prevCpa:null,badge:'ob-bd',label:'🔴 주의'},
     ];
   } else {
     campRows = [
-      {nm:'G.tROAS(전체)',tag:null,type:'GT',cost:w.gt?.cost,inst:w.gt?.install,cont:w.gt?.contact,cpi:w.gt?.cpi,cpa:w.gt?.cpa,cpm:w.gt?.cpm,ctr:w.gt?.ctr,badge:'ob-ok',label:''},
-      {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,badge:'ob-ok',label:''},
-      {nm:'FB_Install',tag:null,type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,badge:'ob-ok',label:''},
+      {nm:'G.tROAS(전체)',tag:null,type:'GT',cost:w.gt?.cost,inst:w.gt?.install,cont:w.gt?.contact,cpi:w.gt?.cpi,cpa:w.gt?.cpa,cpm:w.gt?.cpm,ctr:w.gt?.ctr,prevCpi:prevGT?.cpi,prevCpa:prevGT?.cpa,badge:'ob-ok',label:''},
+      {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,prevCpi:prevGI?.cpi,prevCpa:prevGI?.cpa,badge:'ob-ok',label:''},
+      {nm:'FB_Install',tag:null,type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,prevCpi:prevFBI?.cpi,prevCpa:prevFBI?.cpa,badge:'ob-ok',label:''},
     ];
   }
 
-  const cpiCls = (v, thr) => !v?'td-r':v<=thr?'td-ok':v>thr*1.15?'td-bd':'td-wn';
+  // CPI/CPA: 전주 대비 상승=빨강, 하락=파랑, 전주없으면 기본
+  function cpiColorCls(curr, prevVal) {
+    if (!curr) return 'td-r';
+    if (!prevVal) return 'td-r';
+    return curr > prevVal ? 'td-bd' : 'td-ok';  // 상승=빨강(bd), 하락=파랑(ok)
+  }
+  // 전주 캠페인별 CPI/CPA
+  const prevGT  = curIdx > 0 ? WEEKS[curIdx-1].gt  : null;
+  const prevGI  = curIdx > 0 ? WEEKS[curIdx-1].gi  : null;
+  const prevFBI = curIdx > 0 ? WEEKS[curIdx-1].fbi : null;
 
   document.getElementById('overview-content').innerHTML = `
     ${curIdx > 0 ? `
     <div class="sec"><span class="sec-accent">WoW</span> 볼륨 &amp; 효율 — 전 매체 합산</div>
-    <div class="g4 mb12">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px">
       ${wowCards.map(c=>`<div class="wow-card">
         <div class="wow-lbl">${c.lbl}</div>
         <div class="wow-val">${c.val}</div>
@@ -836,9 +862,9 @@ function renderOverview(w, isJuneOrLater) {
             <td style="font-size:9px;color:var(--t3)">${r.type}</td>
             <td class="td-r">${r.cost?Math.round(r.cost).toLocaleString('ko'):'—'}</td>
             <td class="td-r">${r.inst!=null?Math.round(r.inst).toLocaleString('ko'):'—'}</td>
-            <td class="${cpiCls(r.cpi,r.type==='META'?1700:2000)}">${r.cpi?r.cpi.toLocaleString('ko')+'원':'—'}</td>
+            <td class="${cpiColorCls(r.cpi,r.prevCpi)}">${r.cpi?r.cpi.toLocaleString('ko')+'원':'—'}</td>
             <td class="td-r">${r.cont!=null?Math.round(r.cont)+'건':'—'}</td>
-            <td class="${r.cpa&&r.cpa<50000?'td-ok':'td-r'}">${r.cpa?r.cpa.toLocaleString('ko')+'원':'—'}</td>
+            <td class="${cpiColorCls(r.cpa,r.prevCpa)}">${r.cpa?r.cpa.toLocaleString('ko')+'원':'—'}</td>
             <td class="td-r">${r.cpm?r.cpm.toLocaleString('ko'):'—'}</td>
             <td class="td-r">${r.ctr!=null?r.ctr.toFixed(1)+'%':'—'}</td>
             ${isJuneOrLater&&r.label?`<td><span class="ob ${r.badge}">${r.label}</span></td>`:(isJuneOrLater?'<td></td>':'')}
@@ -903,6 +929,7 @@ function renderOverview(w, isJuneOrLater) {
   // WoW 수치 직접 채우기 (innerHTML regex 방식 대신)
   const cards2 = document.querySelectorAll('#overview-content .wow-card');
   const rawData = [
+    {curr:curCost, prev:prevCost2, a4:a4cost},
     {curr:curInst, prev:prevInst, a4:a4i},
     {curr:curCont, prev:prevCont, a4:a4c},
     {curr:curCPI,  prev:prevCPI,  a4:a4CPI},
