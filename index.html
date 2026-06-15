@@ -268,7 +268,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100
 
 <script>
 /* ══════════════════════════════════════════
-   CONFIG
+   CONFIG v2.1
 ══════════════════════════════════════════ */
 // Apps Script 배포 후 URL을 아래에 붙여넣기
 // 배포 방법: 구글시트 → 확장 프로그램 → Apps Script → 코드 붙여넣기 → 배포 → 새 배포 → 웹 앱
@@ -745,23 +745,38 @@ function renderOverview(w, isJuneOrLater) {
   let avg4 = {cost:0,install:0,contact:0,cnt:0};
   for (let i=startIdx; i<curIdx; i++) {
     const pw = WEEKS[i];
-    avg4.cost    += (pw.gt?.cost||0)+(pw.gi?.cost||0)+(pw.fbi?.cost||0);
-    avg4.install += (pw.gt?.install||0)+(pw.gi?.install||0)+(pw.fbi?.install||0);
-    avg4.contact += (pw.gt?.contact||0)+(pw.gi?.contact||0)+(pw.fbi?.contact||0);
+    const isPwJune = pw.week_start >= '2026-06-01';
+    const pwFbcDaily = isPwJune ? getWeekDaily(DAILY.fbc, pw.week_start, pw.week_end) : [];
+    let pwFbcCost=0,pwFbcInst=0,pwFbcCont=0;
+    pwFbcDaily.forEach(d=>{pwFbcCost+=d.cost;pwFbcInst+=d.install;pwFbcCont+=d.contact;});
+    avg4.cost    += (pw.gt?.cost||0)+(pw.gi?.cost||0)+(pw.fbi?.cost||0)+pwFbcCost;
+    avg4.install += (pw.gt?.install||0)+(pw.gi?.install||0)+(pw.fbi?.install||0)+pwFbcInst;
+    avg4.contact += (pw.gt?.contact||0)+(pw.gi?.contact||0)+(pw.fbi?.contact||0)+pwFbcCont;
     avg4.cnt++;
   }
   const a4i = avg4.cnt > 0 ? avg4.install/avg4.cnt : null;
   const a4c = avg4.cnt > 0 ? avg4.contact/avg4.cnt : null;
   const a4s = avg4.cnt > 0 ? avg4.cost/avg4.cnt : null;
   
-  const curInst  = (w.gt?.install||0)+(w.gi?.install||0)+(w.fbi?.install||0);
-  const curCont  = (w.gt?.contact||0)+(w.gi?.contact||0)+(w.fbi?.contact||0);
-  const curCost  = (w.gt?.cost||0)+(w.gi?.cost||0)+(w.fbi?.cost||0);
+  // 6월 이후: FBC(FB_CPA) 포함 합산
+  const fbcDaily4wow = isJuneOrLater ? getWeekDaily(DAILY.fbc, w.week_start, w.week_end) : [];
+  let fbcCost4wow=0, fbcInst4wow=0, fbcCont4wow=0;
+  fbcDaily4wow.forEach(d=>{fbcCost4wow+=d.cost; fbcInst4wow+=d.install; fbcCont4wow+=d.contact;});
+
+  const curInst  = (w.gt?.install||0)+(w.gi?.install||0)+(w.fbi?.install||0)+fbcInst4wow;
+  const curCont  = (w.gt?.contact||0)+(w.gi?.contact||0)+(w.fbi?.contact||0)+fbcCont4wow;
+  const curCost  = (w.gt?.cost||0)+(w.gi?.cost||0)+(w.fbi?.cost||0)+fbcCost4wow;
   const curCPI   = curInst>0 ? Math.round(curCost/curInst) : null;
   const curCPA   = curCont>0 ? Math.round(curCost/curCont) : null;
-  const prevInst = prev ? (prev.gt?.install||0)+(prev.gi?.install||0)+(prev.fbi?.install||0) : null;
-  const prevCont = prev ? (prev.gt?.contact||0)+(prev.gi?.contact||0)+(prev.fbi?.contact||0) : null;
-  const prevCost = prev ? (prev.gt?.cost||0)+(prev.gi?.cost||0)+(prev.fbi?.cost||0) : null;
+
+  // 전주도 동일하게 FBC 포함
+  const prevFbcDaily4wow = (isJuneOrLater && prev) ? getWeekDaily(DAILY.fbc, prev.week_start, prev.week_end) : [];
+  let prevFbcCost4wow=0, prevFbcInst4wow=0, prevFbcCont4wow=0;
+  prevFbcDaily4wow.forEach(d=>{prevFbcCost4wow+=d.cost; prevFbcInst4wow+=d.install; prevFbcCont4wow+=d.contact;});
+
+  const prevInst = prev ? (prev.gt?.install||0)+(prev.gi?.install||0)+(prev.fbi?.install||0)+prevFbcInst4wow : null;
+  const prevCont = prev ? (prev.gt?.contact||0)+(prev.gi?.contact||0)+(prev.fbi?.contact||0)+prevFbcCont4wow : null;
+  const prevCost = prev ? (prev.gt?.cost||0)+(prev.gi?.cost||0)+(prev.fbi?.cost||0)+prevFbcCost4wow : null;
   const prevCPI  = prevInst>0 ? Math.round(prevCost/prevInst) : null;
   const prevCPA  = prevCont>0 ? Math.round(prevCost/prevCont) : null;
   const a4CPI    = a4i>0 ? Math.round(a4s/a4i) : null;
