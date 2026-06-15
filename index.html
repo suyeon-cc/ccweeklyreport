@@ -185,6 +185,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100
 .view-panel{display:none}
 .view-panel.active{display:block}
 .no-data-msg{padding:32px;text-align:center;color:var(--t3);font-size:12px}
+/* ── OPT BOX ── */
+.opt-box{background:rgba(0,0,0,.03);border-radius:var(--rs);border:1px solid var(--border);padding:10px 12px;margin-bottom:7px}
+.opt-bh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.opt-type{font-size:9px;color:var(--t3)}
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.opt-inner{background:rgba(0,0,0,.03);border-radius:6px;padding:8px 10px}
+.opt-inner-hd{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.opt-inner-body{font-size:10px;color:var(--t2);display:flex;flex-direction:column;gap:3px}
+.opt-result{font-size:10px;color:var(--t2);border-radius:5px;padding:7px 10px}
+.opt-result.ok{background:rgba(0,171,255,.06)}
+.opt-result.warn{background:rgba(255,70,104,.06)}
+
 </style>
 </head>
 <body>
@@ -588,8 +600,9 @@ function N(v,u='') { return v==null?'—':Math.round(v).toLocaleString('ko')+u; 
 
 function make4Charts(containerID, srcKey, color, last12=true) {
   const el = document.getElementById(containerID); if(!el) return;
-  let wks = WEEKS;
-  if (last12) wks = wks.slice(-12);
+  // 선택 주차까지만 (curIdx+1개), 최대 12주
+  let wks = WEEKS.slice(0, curIdx + 1);
+  if (last12 && wks.length > 12) wks = wks.slice(-12);
   const labels = wks.map(w => w.label.split(' ')[0]);
   const keys = ['cpm','ctr','cpi','cpa'];
   const units = ['원','%','원','원'];
@@ -799,6 +812,7 @@ function renderOverview(w, isJuneOrLater) {
   const cpiCls = (v, thr) => !v?'td-r':v<=thr?'td-ok':v>thr*1.15?'td-bd':'td-wn';
 
   document.getElementById('overview-content').innerHTML = `
+    ${curIdx > 0 ? `
     <div class="sec"><span class="sec-accent">WoW</span> 볼륨 &amp; 효율 — 전 매체 합산</div>
     <div class="g4 mb12">
       ${wowCards.map(c=>`<div class="wow-card">
@@ -809,7 +823,7 @@ function renderOverview(w, isJuneOrLater) {
           ${a4i&&c.d2?`<div class="wow-dr"><span class="wow-dl">${c.d2}</span><span class="wow-dv">${c.v2.match(/>[^<]+</)?c.v2.match(/>[^<]+</)[0].slice(1,-1):''}</span></div>`:''}
         </div>
       </div>`).join('')}
-    </div>
+    </div>` : ''}
     <div class="sec"><span class="sec-accent">Campaign</span> 캠페인별 주간 효율</div>
     <div class="card mb12">
       <div class="ct">매체별 ${w.label} 지표</div>
@@ -832,6 +846,59 @@ function renderOverview(w, isJuneOrLater) {
         </tbody>
       </table>
     </div>`;
+
+  // 6월 이후 판정 박스 추가
+  if (isJuneOrLater) {
+    const optHtml = `
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+      <div class="opt-box">
+        <div class="opt-bh"><span class="ob ob-wn">⚠ G.tROAS_TOP / LOW</span><span class="opt-type">GT · 4개 중 2개 이상 충족 시 개입</span></div>
+        <div class="opt-grid">
+          <div class="opt-inner"><div class="opt-inner-hd">개입 기준</div><div class="opt-inner-body">
+            <div>① CPI 7일 평균 목표 대비 +15% 초과</div><div>② CTR 0.7% 미만 3일 연속</div>
+            <div>③ CPM 전주 대비 +20% 초과</div><div>④ Contact 일평균 10건 미만</div>
+          </div></div>
+          <div class="opt-inner"><div class="opt-inner-hd">현재 상황 (${w.label})</div><div class="opt-inner-body">
+            <div>① CPI TOP ${topCPI ? topCPI.toLocaleString('ko')+'원' : '—'} / LOW ${lowCPI ? lowCPI.toLocaleString('ko')+'원' : '—'} <span style="color:#ff4668;font-weight:700">❌ 초과</span></div>
+            <div>② CTR ${w.gt?.ctr != null ? w.gt.ctr.toFixed(1)+'%' : '—'} <span style="color:#00ABFF;font-weight:700">✅ 확인</span></div>
+            <div>③ CPM ${w.gt?.cpm ? w.gt.cpm.toLocaleString('ko')+'원' : '—'} <span style="color:#ff4668;font-weight:700">❌ 주의</span></div>
+            <div>④ Contact 일평균 TOP ${topCont>0?(topCont/7).toFixed(1):'—'}건 / LOW ${lowCont>0?(lowCont/7).toFixed(1):'—'}건 <span style="color:#ff4668;font-weight:700">❌ 미달</span></div>
+          </div></div>
+        </div>
+        <div class="opt-result warn">4개 기준 중 3개 충족 → 개입 검토. 6월 신규 분리 학습 구간 감안. 2주 모니터링 후 타겟 ROAS 조정 또는 에셋 최적화 결정.</div>
+      </div>
+      <div class="opt-box">
+        <div class="opt-bh"><span class="ob ob-ok">✓ G.UAC (GI)</span><span class="opt-type">GI · 3개 중 2개 이상 충족 시 개입</span></div>
+        <div class="opt-grid">
+          <div class="opt-inner"><div class="opt-inner-hd">개입 기준</div><div class="opt-inner-body">
+            <div>① CPI 2,000원 이상 3일 이상 지속</div><div>② CTR 0.8% 미만 지속</div><div>③ CPM 전주 대비 +20% 초과</div>
+          </div></div>
+          <div class="opt-inner"><div class="opt-inner-hd">현재 상황 (${w.label})</div><div class="opt-inner-body">
+            <div>① CPI ${w.gi?.cpi ? w.gi.cpi.toLocaleString('ko')+'원' : '—'} <span style="color:#00ABFF;font-weight:700">✅ 충족</span></div>
+            <div>② CTR ${w.gi?.ctr != null ? w.gi.ctr.toFixed(1)+'%' : '—'} <span style="color:#00ABFF;font-weight:700">✅ 충족</span></div>
+            <div>③ CPM ${w.gi?.cpm ? w.gi.cpm.toLocaleString('ko')+'원' : '—'} <span style="color:#00ABFF;font-weight:700">✅ 충족</span></div>
+          </div></div>
+        </div>
+        <div class="opt-result ok">3개 기준 모두 충족 · CPI ${w.gi?.cpi ? w.gi.cpi.toLocaleString('ko')+'원' : '—'} · 현 운영 유지 권고</div>
+      </div>
+      <div class="opt-box">
+        <div class="opt-bh"><span class="ob ob-bd">🔴 FB_Install / FB_CPA</span><span class="opt-type">META · 3개 중 2개 이상 충족 시 개입</span></div>
+        <div class="opt-grid">
+          <div class="opt-inner"><div class="opt-inner-hd">개입 기준</div><div class="opt-inner-body">
+            <div>① CPI 1,700원 이상 or 전주 대비 +15% 초과</div><div>② CPM 전주 대비 +20% 초과 지속</div>
+            <div>③ CPA 목표 초과 or Contact 주간 20건 미만</div>
+          </div></div>
+          <div class="opt-inner"><div class="opt-inner-hd">현재 상황 (${w.label})</div><div class="opt-inner-body">
+            <div>① FB_Install CPI ${w.fbi?.cpi ? w.fbi.cpi.toLocaleString('ko')+'원' : '—'} / FB_CPA ${fbcCPI ? fbcCPI.toLocaleString('ko')+'원' : '—'} <span style="color:#ff4668;font-weight:700">❌ 초과</span></div>
+            <div>② CPM FB_Install ${w.fbi?.cpm ? w.fbi.cpm.toLocaleString('ko')+'원' : '—'} <span style="color:#ff4668;font-weight:700">❌ 초과</span></div>
+            <div>③ FB_CPA Contact ${fbcCont}건(목표 20건 미만) <span style="color:#ff4668;font-weight:700">❌ 미달</span></div>
+          </div></div>
+        </div>
+        <div class="opt-result warn">FB_Install · FB_CPA 모두 3개 기준 충족 → 개입 대상. 1주 추가 관찰 후 소재 교체 또는 타겟 재설정 검토.</div>
+      </div>
+    </div>`;
+    document.getElementById('overview-content').innerHTML += optHtml;
+  }
 
   // WoW 수치 직접 채우기 (innerHTML regex 방식 대신)
   const cards2 = document.querySelectorAll('#overview-content .wow-card');
@@ -863,9 +930,19 @@ function renderOverview(w, isJuneOrLater) {
 ══════════════════════════════════════════ */
 function renderGoogle(w, isJuneOrLater) {
   const topLowDaily = isJuneOrLater ? getTopLowDaily(w.week_start, w.week_end) : [];
+  // 선택 주차까지 daily 배열 생성 (차트용)
+  const giDailyArr  = getWeekDaily(DAILY.gi,  w.week_start, w.week_end);
+  const gtDailyArr  = getWeekDaily(DAILY.gt,  w.week_start, w.week_end);
+
+  // 주차 수에 따라 차트 레이블 결정
+  const weekCount = curIdx + 1;
+  const chartLabel = weekCount <= 2
+    ? `Daily · ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)}`
+    : `최근 ${Math.min(weekCount,12)}주 Weekly · ~${fmtMMDD(w.week_end)}`;
+
   const tlLabel = isJuneOrLater
     ? `Daily · ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)}`
-    : '6월 이후 데이터부터 제공';
+    : '';
 
   document.getElementById('google-content').innerHTML = `
     <div class="role-grid">
@@ -882,16 +959,22 @@ function renderGoogle(w, isJuneOrLater) {
         <div class="role-kpi">핵심 KPI: CPA(Contact) · Contact 일평균 ≥ 10건</div>
       </div>
     </div>
-    <div class="sec"><span class="sec-accent">GI</span> G.UAC — CPM · CTR · CPI · CPA <span class="sec-sub">최근 12주 Weekly</span></div>
+    <div class="sec"><span class="sec-accent">GI</span> G.UAC — CPM · CTR · CPI · CPA <span class="sec-sub">${chartLabel}</span></div>
     <div class="chart4-row" id="gi-charts"></div>
-    <div class="sec"><span class="sec-accent">GT</span> G.tROAS 전체 — CPM · CTR · CPI · CPA <span class="sec-sub">최근 12주 Weekly</span></div>
+    <div class="sec"><span class="sec-accent">GT</span> G.tROAS 전체 — CPM · CTR · CPI · CPA <span class="sec-sub">${chartLabel}</span></div>
     <div class="chart4-row" id="gt-charts"></div>
+    ${isJuneOrLater ? `
     <div class="sec"><span class="sec-accent">GT</span> tROAS_TOP vs LOW 비교 <span class="sec-sub">${tlLabel}</span></div>
-    <div class="toplow-row" id="toplow-charts"></div>`;
+    <div class="toplow-row" id="toplow-charts"></div>` : ''}`;
 
-  make4Charts('gi-charts', 'gi', '#465fff');
-  make4Charts('gt-charts', 'gt', '#ff46c4');
-  makeTopLowCharts('toplow-charts', topLowDaily);
+  if (weekCount <= 2) {
+    makeDailyCharts('gi-charts', giDailyArr, '#465fff');
+    makeDailyCharts('gt-charts', gtDailyArr, '#ff46c4');
+  } else {
+    make4Charts('gi-charts', 'gi', '#465fff');
+    make4Charts('gt-charts', 'gt', '#ff46c4');
+  }
+  if (isJuneOrLater) makeTopLowCharts('toplow-charts', topLowDaily);
 }
 
 /* ══════════════════════════════════════════
@@ -899,7 +982,12 @@ function renderGoogle(w, isJuneOrLater) {
 ══════════════════════════════════════════ */
 function renderMeta(w, isJuneOrLater) {
   const fbcDaily = isJuneOrLater ? getWeekDaily(DAILY.fbc, w.week_start, w.week_end) : [];
+  const fbiDailyArr = getWeekDaily(DAILY.fbi, w.week_start, w.week_end);
   const hierWeekKey = isJuneOrLater ? w.week_start : null;
+  const weekCount = curIdx + 1;
+  const fbiChartLabel = weekCount <= 2
+    ? `Daily · ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)}`
+    : `최근 ${Math.min(weekCount,12)}주 Weekly · ~${fmtMMDD(w.week_end)}`;
 
   document.getElementById('meta-content').innerHTML = `
     <div class="role-grid">
@@ -916,10 +1004,11 @@ function renderMeta(w, isJuneOrLater) {
         <div class="role-kpi">핵심 KPI: CPA(Contact) · 7일 누적 Contact ≥ 20건</div>
       </div>
     </div>
-    <div class="sec"><span class="sec-accent">Install</span> FB_Install — CPM · CTR · CPI · CPA <span class="sec-sub">최근 12주 Weekly</span></div>
+    <div class="sec"><span class="sec-accent">Install</span> FB_Install — CPM · CTR · CPI · CPA <span class="sec-sub">${fbiChartLabel}</span></div>
     <div class="chart4-row" id="fbi-charts"></div>
-    <div class="sec"><span class="sec-accent">CPA</span> FB_CPA — CPM · CTR · CPI · CPA <span class="sec-sub">${isJuneOrLater?`Daily · ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)} · 6월 신규 라이브`:'6월 이후 데이터부터 제공'}</span></div>
-    <div class="chart4-row" id="fbc-charts"></div>
+    ${isJuneOrLater ? `
+    <div class="sec"><span class="sec-accent">CPA</span> FB_CPA — CPM · CTR · CPI · CPA <span class="sec-sub">Daily · ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)} · 6월 신규 라이브</span></div>
+    <div class="chart4-row" id="fbc-charts"></div>` : ''}
     ${isJuneOrLater ? `
     <div class="sec"><span class="sec-accent">Insight</span> 광고세트 효율 &amp; 액션 아이템</div>
     <div class="insight-panel" id="insight-panel"></div>
@@ -933,8 +1022,12 @@ function renderMeta(w, isJuneOrLater) {
       </table>
     </div>` : '<div class="no-data-msg" style="padding:24px 0">6월 이전 주차에는 소재별 데이터가 제공되지 않습니다</div>'}`;
 
-  make4Charts('fbi-charts', 'fbi', '#465fff');
-  makeDailyCharts('fbc-charts', fbcDaily, '#ff46c4');
+  if (weekCount <= 2) {
+    makeDailyCharts('fbi-charts', fbiDailyArr, '#465fff');
+  } else {
+    make4Charts('fbi-charts', 'fbi', '#465fff');
+  }
+  if (isJuneOrLater) makeDailyCharts('fbc-charts', fbcDaily, '#ff46c4');
 
   if (isJuneOrLater) {
     renderInsight(w.week_start);
