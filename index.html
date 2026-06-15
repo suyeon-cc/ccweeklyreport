@@ -353,10 +353,11 @@ function fetchAllData() {
 function convertRow(arr) {
   if (!arr || arr.length < 5) return null;
   const [cost, imps, clicks, install, contact, ctrRaw, cpmRaw] = arr;
-  // ctr: Apps Script에서 % 단위로 전달 (예: 0.81)
-  // cpm: Apps Script에서 직접 계산해서 전달
-  const ctr = ctrRaw != null ? parseFloat(ctrRaw.toFixed(1)) : null;
-  const cpm = cpmRaw != null ? Math.round(cpmRaw) :
+  // Apps Script 컬럼: COL_CTR=8(소수값 예:0.0081), COL_INSTALL=13(Install[new]), COL_CONTACT=18
+  // ctrRaw: % 단위로 전달됨 (예: 0.81) → 소수점 1자리로 표기
+  const ctr = (ctrRaw != null && ctrRaw > 0) ? parseFloat(Number(ctrRaw).toFixed(1)) : null;
+  // cpm: Apps Script에서 직접 계산 전달, 없으면 imps로 계산
+  const cpm = (cpmRaw != null && cpmRaw > 0) ? Math.round(cpmRaw) :
               (imps > 0 ? Math.round(cost / imps * 1000) : null);
   return {
     cost, imps, clicks, install, contact,
