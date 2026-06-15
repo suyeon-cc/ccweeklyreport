@@ -352,13 +352,18 @@ function fetchAllData() {
 // Apps Script 배열 형식 [cost, imps, clicks, install, contact] → 객체로 변환
 function convertRow(arr) {
   if (!arr || arr.length < 5) return null;
-  const [cost, imps, clicks, install, contact] = arr;
+  const [cost, imps, clicks, install, contact, ctrRaw, cpmRaw] = arr;
+  // ctr: Apps Script에서 % 단위로 전달 (예: 0.81)
+  // cpm: Apps Script에서 직접 계산해서 전달
+  const ctr = ctrRaw != null ? parseFloat(ctrRaw.toFixed(1)) : null;
+  const cpm = cpmRaw != null ? Math.round(cpmRaw) :
+              (imps > 0 ? Math.round(cost / imps * 1000) : null);
   return {
     cost, imps, clicks, install, contact,
-    cpm:     imps    > 0 ? Math.round(cost / imps * 1000)         : null,
-    ctr:     imps    > 0 ? parseFloat((clicks / imps * 100).toFixed(1)) : null,
-    cpi:     install > 0 ? Math.round(cost / install)              : null,
-    cpa:     contact > 0 ? Math.round(cost / contact)              : null,
+    cpm,
+    ctr,
+    cpi: install > 0 ? Math.round(cost / install) : null,
+    cpa: contact > 0 ? Math.round(cost / contact) : null,
   };
 }
 
