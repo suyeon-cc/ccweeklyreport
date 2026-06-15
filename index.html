@@ -831,16 +831,17 @@ function renderOverview(w, isJuneOrLater) {
     ];
   }
 
+  // 전주 캠페인별 데이터
+  const prevGT  = curIdx > 0 ? WEEKS[curIdx-1].gt  : null;
+  const prevGI  = curIdx > 0 ? WEEKS[curIdx-1].gi  : null;
+  const prevFBI = curIdx > 0 ? WEEKS[curIdx-1].fbi : null;
+
   // CPI/CPA: 전주 대비 상승=빨강, 하락=파랑, 전주없으면 기본
   function cpiColorCls(curr, prevVal) {
     if (!curr) return 'td-r';
     if (!prevVal) return 'td-r';
-    return curr > prevVal ? 'td-bd' : 'td-ok';  // 상승=빨강(bd), 하락=파랑(ok)
+    return curr > prevVal ? 'td-bd' : 'td-ok';
   }
-  // 전주 캠페인별 CPI/CPA
-  const prevGT  = curIdx > 0 ? WEEKS[curIdx-1].gt  : null;
-  const prevGI  = curIdx > 0 ? WEEKS[curIdx-1].gi  : null;
-  const prevFBI = curIdx > 0 ? WEEKS[curIdx-1].fbi : null;
 
   document.getElementById('overview-content').innerHTML = `
     ${curIdx > 0 ? `
