@@ -737,6 +737,10 @@ function getTopLowDaily(ws, we) {
 ══════════════════════════════════════════ */
 function renderOverview(w, isJuneOrLater) {
   const prev = curIdx > 0 ? WEEKS[curIdx-1] : null;
+  // 전주 캠페인별 데이터 (함수 최상단에서 선언)
+  const prevGT  = curIdx > 0 ? WEEKS[curIdx-1].gt  : null;
+  const prevGI  = curIdx > 0 ? WEEKS[curIdx-1].gi  : null;
+  const prevFBI = curIdx > 0 ? WEEKS[curIdx-1].fbi : null;
   const startIdx = Math.max(0, curIdx-4);
   let avg4 = {cost:0,install:0,contact:0,cnt:0};
   for (let i=startIdx; i<curIdx; i++) {
@@ -830,11 +834,6 @@ function renderOverview(w, isJuneOrLater) {
       {nm:'FB_Install',tag:null,type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,prevCpi:prevFBI?.cpi,prevCpa:prevFBI?.cpa,badge:'ob-ok',label:''},
     ];
   }
-
-  // 전주 캠페인별 데이터
-  const prevGT  = curIdx > 0 ? WEEKS[curIdx-1].gt  : null;
-  const prevGI  = curIdx > 0 ? WEEKS[curIdx-1].gi  : null;
-  const prevFBI = curIdx > 0 ? WEEKS[curIdx-1].fbi : null;
 
   // CPI/CPA: 전주 대비 상승=빨강, 하락=파랑, 전주없으면 기본
   function cpiColorCls(curr, prevVal) {
