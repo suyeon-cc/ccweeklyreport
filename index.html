@@ -100,9 +100,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:rgba(0,0,0,.03)}
 .td-r{text-align:right;color:var(--t2)}
-.td-ok{color:#00ABFF;font-weight:700;text-align:right}
+.td-ok{color:#00ABFF;text-align:right}
 .td-bd{color:#ff4668;text-align:right}
-.td-wn{color:#d97706;font-weight:600;text-align:right}
+.td-wn{color:#d97706;text-align:right}
 .cnm{font-weight:600;color:var(--t1)}
 .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:20px;margin-left:4px;vertical-align:middle}
 .tag-new{background:rgba(0,171,255,.15);color:#00ABFF}
@@ -635,6 +635,12 @@ function makeDailyCharts(containerID, dailyArr, color) {
   const el = document.getElementById(containerID); if(!el) return;
   if (!dailyArr || !dailyArr.length) { el.innerHTML='<div class="no-data-msg">이 주차의 일별 데이터가 없습니다</div>'; return; }
   const labels = dailyArr.map(d => d.label);
+  // 14일 초과 시 x축 레이블 간격 조정 (첫날, 7일마다, 마지막)
+  function pickLabels(arr, n) {
+    if (n <= 14) return arr;
+    return arr.map((l,i) => (i===0 || i===n-1 || i%7===0) ? l : '');
+  }
+  const dispLabels = pickLabels(labels, labels.length);
   const keys = ['cpm','ctr','cpi','cpa'];
   const units = ['원','%','원','원'];
   const mLabels = ['CPM','CTR','CPI','CPA'];
@@ -648,7 +654,7 @@ function makeDailyCharts(containerID, dailyArr, color) {
       <div class="c4-label">${mLabels[ki]}</div>
       <div class="c4-current">${fmtV(curr,units[ki])}</div>
       <div class="c4-delta">${fmtDelta(curr,prev)} <span style="color:var(--t3);font-size:9px">vs 전일</span></div>
-      ${sparkLine(data, color, labels, units[ki])}
+      ${sparkLine(data, color, dispLabels, units[ki])}
     </div>`;
   });
   el.innerHTML = html;
@@ -686,7 +692,11 @@ function makeTopLowCharts(containerID, dailyArr) {
       });
       return `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>${dot}${hover}`;
     }
-    const xLabels = days.map((d,i)=>`<text x="${pL+i*xS}" y="${H}" text-anchor="middle" font-size="8" fill="#94a3b8">${d}</text>`).join('');
+    const n_days = days.length;
+    const xLabels = days.map((d,i)=>{
+      const show = n_days<=14 ? true : (i===0||i===n_days-1||i%7===0);
+      return `<text x="${pL+i*xS}" y="${H}" text-anchor="middle" font-size="8" fill="#94a3b8">${show?d:''}</text>`;
+    }).join('');
     const topCurr=topD.filter(v=>v!=null).pop(), lowCurr=lowD.filter(v=>v!=null).pop();
     html+=`<div class="toplow-card">
       <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">${m.label}</div>
@@ -812,7 +822,8 @@ function renderOverview(w, isJuneOrLater) {
   ];
 
   // 캠페인 테이블
-  const fbcDaily = isJuneOrLater ? getWeekDaily(DAILY.fbc, w.week_start, w.week_end) : [];
+  // 6월 이후: 6/1부터 선택 주차 마지막날까지 전체 daily
+  const fbcDaily = isJuneOrLater ? getWeekDaily(DAILY.fbc, '2026-06-01', w.week_end) : [];
   const topDaily = isJuneOrLater ? getWeekDaily(DAILY.top, w.week_start, w.week_end) : [];
   const lowDaily = isJuneOrLater ? getWeekDaily(DAILY.low, w.week_start, w.week_end) : [];
   let fbcCost=0,fbcInst=0,fbcCont=0; fbcDaily.forEach(d=>{fbcCost+=d.cost;fbcInst+=d.install;fbcCont+=d.contact;});
@@ -875,6 +886,10 @@ function renderOverview(w, isJuneOrLater) {
     <div class="card mb12">
       <div class="ct">매체별 ${w.label} 지표</div>
       <div class="cs">CPA = Cost ÷ CONTACT · CTR 소수점 1자리</div>
+      <div style="display:flex;gap:14px;margin-bottom:10px;font-size:10px">
+        <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4668"></span><span style="color:var(--t2)">CPI·CPA 전주 대비 상승</span></span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00ABFF"></span><span style="color:var(--t2)">CPI·CPA 전주 대비 하락</span></span>
+      </div>
       <table class="tbl">
         <thead><tr><th>캠페인</th><th>유형</th><th class="r">Cost</th><th class="r">Install</th><th class="r">CPI</th><th class="r">Contact</th><th class="r">CPA</th><th class="r">CPM</th><th class="r">CTR</th>${isJuneOrLater?'<th>판정</th>':''}</tr></thead>
         <tbody>
@@ -977,7 +992,8 @@ function renderOverview(w, isJuneOrLater) {
    RENDER GOOGLE
 ══════════════════════════════════════════ */
 function renderGoogle(w, isJuneOrLater) {
-  const topLowDaily = isJuneOrLater ? getTopLowDaily(w.week_start, w.week_end) : [];
+  // 6월 이후: 6/1부터 선택 주차 마지막날까지 전체 daily
+  const topLowDaily = isJuneOrLater ? getTopLowDaily('2026-06-01', w.week_end) : [];
   // 선택 주차까지 daily 배열 생성 (차트용)
   const giDailyArr  = getWeekDaily(DAILY.gi,  w.week_start, w.week_end);
   const gtDailyArr  = getWeekDaily(DAILY.gt,  w.week_start, w.week_end);
@@ -989,7 +1005,7 @@ function renderGoogle(w, isJuneOrLater) {
     : `최근 ${Math.min(weekCount,12)}주 Weekly · ~${fmtMMDD(w.week_end)}`;
 
   const tlLabel = isJuneOrLater
-    ? `Daily · ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)}`
+    ? `Daily · 06/01~${fmtMMDD(w.week_end)}`
     : '';
 
   document.getElementById('google-content').innerHTML = `
@@ -1055,7 +1071,7 @@ function renderMeta(w, isJuneOrLater) {
     <div class="sec"><span class="sec-accent">Install</span> FB_Install — CPM · CTR · CPI · CPA <span class="sec-sub">${fbiChartLabel}</span></div>
     <div class="chart4-row" id="fbi-charts"></div>
     ${isJuneOrLater ? `
-    <div class="sec"><span class="sec-accent">CPA</span> FB_CPA — CPM · CTR · CPI · CPA <span class="sec-sub">Daily · ${fmtMMDD(w.week_start)}~${fmtMMDD(w.week_end)} · 6월 신규 라이브</span></div>
+    <div class="sec"><span class="sec-accent">CPA</span> FB_CPA — CPM · CTR · CPI · CPA <span class="sec-sub">Daily · 06/01~${fmtMMDD(w.week_end)} · 6월 신규 라이브</span></div>
     <div class="chart4-row" id="fbc-charts"></div>` : ''}
     ${isJuneOrLater ? `
     <div class="sec"><span class="sec-accent">Insight</span> 광고세트 효율 &amp; 액션 아이템</div>
