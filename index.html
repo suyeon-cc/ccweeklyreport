@@ -651,11 +651,20 @@ function makeDailyCharts(containerID, dailyArr, color) {
     const data = dailyArr.map(d => d[key]);
     const valid = data.filter(v=>v!=null);
     const curr = valid[valid.length-1];
-    const prev = valid.length>1 ? valid[valid.length-2] : null;
+    // WoW: 마지막 7일 평균 vs 그 이전 7일 평균
+    let wowDelta = '';
+    if (valid.length >= 8) {
+      const avg1 = valid.slice(-7).reduce((a,b)=>a+b,0)/7;
+      const avg2 = valid.slice(-14,-7).reduce((a,b)=>a+b,0)/7;
+      if (avg2 > 0) {
+        const d = (avg1/avg2-1)*100;
+        wowDelta = `<span style="color:#0f172a;font-size:9px">${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%</span> <span style="color:var(--t3);font-size:9px">WoW</span>`;
+      }
+    }
     html += `<div class="chart4-card">
       <div class="c4-label">${mLabels[ki]}</div>
       <div class="c4-current">${fmtV(curr,units[ki])}</div>
-      <div class="c4-delta">${fmtDelta(curr,prev)} <span style="color:var(--t3);font-size:9px">vs 전일</span></div>
+      <div class="c4-delta">${wowDelta}</div>
       ${sparkLine(data, color, dispLabels, units[ki])}
     </div>`;
   });
@@ -666,6 +675,7 @@ function makeTopLowCharts(containerID, dailyArr) {
   const el = document.getElementById(containerID); if(!el) return;
   if (!dailyArr || !dailyArr.length) { el.innerHTML='<div class="no-data-msg">이 주차의 TOP/LOW 일별 데이터가 없습니다</div>'; return; }
   const days = dailyArr.map(d => d.date);
+  const n = dailyArr.length;
   const metrics = [{key:'cpm',label:'CPM',unit:'원'},{key:'ctr',label:'CTR',unit:'%'},{key:'cpi',label:'CPI',unit:'원'},{key:'cpa',label:'CPA',unit:'원'}];
   let html = '';
   metrics.forEach(m => {
@@ -677,7 +687,7 @@ function makeTopLowCharts(containerID, dailyArr) {
     const rawMinV=Math.min(...allV), rawMaxV=Math.max(...allV);
     const padV=(rawMaxV-rawMinV)*0.5||rawMaxV*0.08;
     const minV=rawMinV-padV, maxV=rawMaxV+padV;
-    const n=dailyArr.length, xS=n>1?(W-pL)/(n-1):W/2;
+    const xS=n>1?(W-pL)/(n-1):W/2;
     const sY=v=>pT+(H-pT-pB)*(1-(v-minV)/(maxV-minV));
     function buildLine(data, color) {
       const pts = data.map((v,i)=>v!=null?[pL+i*xS,sY(v)]:null);
@@ -691,22 +701,36 @@ function makeTopLowCharts(containerID, dailyArr) {
         const prevV=data.slice(0,i).filter(x=>x!=null).pop();
         const dStr=prevV!=null?((v/prevV-1)*100).toFixed(1):'—';
         const sign=prevV!=null&&v>prevV?'+':'';
-        const dispVal=m.unit==='%'?v.toFixed(1)+'%':v>=10000?(v/10000).toFixed(1)+'만원':v.toLocaleString('ko')+m.unit;
+        const dispVal=m.unit==='%'?v.toFixed(2)+'%':v>=10000?(v/10000).toFixed(1)+'만원':v.toLocaleString('ko')+m.unit;
         hover+=`<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="transparent" class="hover-pt" style="cursor:pointer" data-val="${dispVal}" data-lbl="${days[i]}" data-delta="${dStr!=='—'?sign+dStr+'%':'—'}"/>`;
       });
       return `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>${dot}${hover}`;
     }
-    const n_days = days.length;
+    // x축: 7일 단위 레이블
     const xLabels = days.map((d,i)=>{
-      const show = n_days<=14 ? true : (i===0||i===n_days-1||i%7===0);
-      return `<text x="${pL+i*xS}" y="${H}" text-anchor="middle" font-size="8" fill="#94a3b8">${show?d:''}</text>`;
+      const show = (i===0 || i===n-1 || i%7===0);
+      const anchor = i===0?'start':(i===n-1?'end':'middle');
+      return `<text x="${pL+i*xS}" y="${H}" text-anchor="${anchor}" font-size="8" fill="#94a3b8">${show?d:''}</text>`;
     }).join('');
+    // WoW: 마지막 7일 평균 vs 그 이전 7일 평균
+    function wowAvg(data) {
+      const valid = data.filter(v=>v!=null);
+      if (valid.length < 8) return null;
+      const curr = valid.slice(-7).reduce((a,b)=>a+b,0)/7;
+      const prev = valid.slice(-14,-7).reduce((a,b)=>a+b,0)/7;
+      return prev > 0 ? ((curr/prev-1)*100) : null;
+    }
+    function wowStr(wow) {
+      if (wow==null) return '<span style="font-size:9px;color:var(--t3)">WoW —</span>';
+      const s=wow>0?'+':''; const arr=wow>0?'🔺':'🔻';
+      return `<span style="font-size:9px;font-weight:600;color:#0f172a">${arr}${s}${wow.toFixed(1)}%</span><span style="font-size:9px;color:var(--t3)"> WoW</span>`;
+    }
     const topCurr=topD.filter(v=>v!=null).pop(), lowCurr=lowD.filter(v=>v!=null).pop();
     html+=`<div class="toplow-card">
       <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">${m.label}</div>
-      <div style="display:flex;gap:10px;margin-bottom:6px">
-        <div><div style="font-size:9px;color:#e84545">TOP</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(topCurr,m.unit)}</div></div>
-        <div><div style="font-size:9px;color:#ff8c42">LOW</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(lowCurr,m.unit)}</div></div>
+      <div style="display:flex;gap:14px;margin-bottom:6px">
+        <div><div style="font-size:9px;color:#e84545">TOP</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(topCurr,m.unit)}</div><div>${wowStr(wowAvg(topD))}</div></div>
+        <div><div style="font-size:9px;color:#ff8c42">LOW</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(lowCurr,m.unit)}</div><div>${wowStr(wowAvg(lowD))}</div></div>
       </div>
       <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible">
         ${buildLine(topD,'#e84545')}
@@ -722,9 +746,7 @@ function makeTopLowCharts(containerID, dailyArr) {
   el.innerHTML = html;
 }
 
-/* ══════════════════════════════════════════
-   GET WEEK DAILY DATA
-══════════════════════════════════════════ */
+
 function getWeekDaily(dailyMap, ws, we) {
   return Object.entries(dailyMap)
     .filter(([d]) => d >= ws && d <= we)
