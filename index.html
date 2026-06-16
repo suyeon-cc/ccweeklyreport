@@ -651,14 +651,26 @@ function makeDailyCharts(containerID, dailyArr, color) {
     const data = dailyArr.map(d => d[key]);
     const valid = data.filter(v=>v!=null);
     const curr = valid[valid.length-1];
-    // WoW: 마지막 7일 평균 vs 그 이전 7일 평균
+    // WoW: 날짜 기준 이번주(마지막 7일) vs 전주(그 이전 7일)
     let wowDelta = '';
-    if (valid.length >= 8) {
-      const avg1 = valid.slice(-7).reduce((a,b)=>a+b,0)/7;
-      const avg2 = valid.slice(-14,-7).reduce((a,b)=>a+b,0)/7;
-      if (avg2 > 0) {
-        const d = (avg1/avg2-1)*100;
-        wowDelta = `<span style="color:#0f172a;font-size:9px">${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%</span> <span style="color:var(--t3);font-size:9px">WoW</span>`;
+    const n_total = dailyArr.length;
+    if (n_total >= 8) {
+      const thisWeek = dailyArr.slice(-7).map(d => d[key]).filter(v=>v!=null);
+      const prevWeek = dailyArr.slice(-14,-7).map(d => d[key]).filter(v=>v!=null);
+      if (thisWeek.length > 0 && prevWeek.length > 0) {
+        const avg1 = thisWeek.reduce((a,b)=>a+b,0)/thisWeek.length;
+        const avg2 = prevWeek.reduce((a,b)=>a+b,0)/prevWeek.length;
+        if (avg2 > 0) {
+          const d = (avg1/avg2-1)*100;
+          wowDelta = `<span style="color:#0f172a;font-size:9px">${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%</span> <span style="color:var(--t3);font-size:9px">WoW</span>`;
+        }
+      }
+    } else if (n_total >= 2) {
+      // 데이터 부족 시 전일 대비
+      const prev2 = valid.length>1 ? valid[valid.length-2] : null;
+      if (prev2 && prev2 > 0) {
+        const d = (curr/prev2-1)*100;
+        wowDelta = `<span style="color:#0f172a;font-size:9px">${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%</span> <span style="color:var(--t3);font-size:9px">DoD</span>`;
       }
     }
     html += `<div class="chart4-card">
@@ -714,10 +726,20 @@ function makeTopLowCharts(containerID, dailyArr) {
     }).join('');
     // WoW: 마지막 7일 평균 vs 그 이전 7일 평균
     function wowAvg(data) {
+      const n_total = dailyArr.length;
+      if (n_total >= 8) {
+        const thisW = dailyArr.slice(-7).map((_,i) => data[n_total-7+i]).filter(v=>v!=null);
+        const prevW = dailyArr.slice(-14,-7).map((_,i) => data[Math.max(0,n_total-14)+i]).filter(v=>v!=null);
+        if (thisW.length > 0 && prevW.length > 0) {
+          const avg1 = thisW.reduce((a,b)=>a+b,0)/thisW.length;
+          const avg2 = prevW.reduce((a,b)=>a+b,0)/prevW.length;
+          return avg2 > 0 ? ((avg1/avg2-1)*100) : null;
+        }
+      }
       const valid = data.filter(v=>v!=null);
-      if (valid.length < 8) return null;
-      const curr = valid.slice(-7).reduce((a,b)=>a+b,0)/7;
-      const prev = valid.slice(-14,-7).reduce((a,b)=>a+b,0)/7;
+      if (valid.length < 2) return null;
+      const curr = valid[valid.length-1];
+      const prev = valid[valid.length-2];
       return prev > 0 ? ((curr/prev-1)*100) : null;
     }
     function wowStr(wow) {
