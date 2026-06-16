@@ -1139,10 +1139,7 @@ function renderOverview(w, isJuneOrLater) {
       ${wowCards.map(c=>`<div class="wow-card">
         <div class="wow-lbl">${c.lbl}</div>
         <div class="wow-val">${c.val}</div>
-        <div class="wow-deltas">
-          ${prev&&c.d1?`<div class="wow-dr"><span class="wow-dl">${c.d1}</span><span class="wow-dv">${c.v1.match(/>[^<]+</)?c.v1.match(/>[^<]+</)[0].slice(1,-1):''}</span></div>`:''}
-          ${a4i&&c.d2?`<div class="wow-dr"><span class="wow-dl">${c.d2}</span><span class="wow-dv">${c.v2.match(/>[^<]+</)?c.v2.match(/>[^<]+</)[0].slice(1,-1):''}</span></div>`:''}
-        </div>
+        <div class="wow-deltas" id="wc-${c.lbl.replace(/\s/g,'')}"></div>
       </div>`).join('')}
     </div>` : ''}
     <div class="sec"><span class="sec-accent">Campaign</span> 캠페인별 주간 효율</div>
@@ -1234,20 +1231,24 @@ function renderOverview(w, isJuneOrLater) {
     {curr:curCPI,  prev:prevCPI,  a4:a4CPI},
     {curr:curCPA,  prev:prevCPA,  a4:a4CPA},
   ];
-  cards2.forEach((card,i) => {
+  // WoW 카드 등락 직접 채우기
+  const wowKeys = wowCards.map(c => c.lbl.replace(/\s/g,''));
+  wowKeys.forEach((key, i) => {
     const r = rawData[i];
-    const deltas = card.querySelector('.wow-deltas');
-    const rows = deltas ? deltas.querySelectorAll('.wow-dr') : [];
-    rows.forEach(row => {
-      const vEl = row.querySelector('.wow-dv');
-      if (!vEl) return;
-      const label = row.querySelector('.wow-dl')?.textContent || '';
-      const isA4 = label.includes('4주');
-      const ref = isA4 ? r.a4 : r.prev;
-      if (!r.curr || !ref || ref===0) { vEl.textContent='—'; return; }
-      const d=(r.curr/ref-1)*100;
-      vEl.textContent = `${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%`;
-    });
+    const el = document.getElementById('wc-' + key);
+    if (!el) return;
+    let html = '';
+    if (r.prev && r.curr && r.prev > 0) {
+      const d = (r.curr/r.prev-1)*100;
+      const lbl = wowCards[i].d1 || '';
+      html += `<div class="wow-dr"><span class="wow-dl">${lbl}</span><span class="wow-dv">${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%</span></div>`;
+    }
+    if (r.a4 && r.curr && r.a4 > 0) {
+      const d = (r.curr/r.a4-1)*100;
+      const lbl = wowCards[i].d2 || '';
+      html += `<div class="wow-dr"><span class="wow-dl">${lbl}</span><span class="wow-dv">${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%</span></div>`;
+    }
+    el.innerHTML = html;
   });
 }
 
