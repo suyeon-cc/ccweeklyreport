@@ -273,6 +273,33 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100
 // Apps Script 배포 후 URL을 아래에 붙여넣기
 // 배포 방법: 구글시트 → 확장 프로그램 → Apps Script → 코드 붙여넣기 → 배포 → 새 배포 → 웹 앱
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhUZiFucOmqXJJGBpSY5EwmYS2vAKTuQUHQWRxV6BfkXiPW-tV2i4zMi33hRnA6t8W/exec";
+// NU PAID 주차별 고정값 (매주 월요일 Amplitude 조회 후 기록)
+// week_start 기준, pct=NU.PAID 진척률, ctb=매체별 [이름, %, KPI건수]
+const NU_PAID_DATA = {
+  "2026-06-01": {
+    pct: 23.3,
+    ctb: [
+      ['NU NB',           40.0, 5],
+      ['NU ACI ROAS_LOW', 21.7, 115],
+      ['NU ACI ROAS_TOP', 8.7,  115],
+      ['NU ACI INSTALL',  14.7, 68],
+      ['NU META',         9.7,  155],
+      ['* NU.ORG',        15.5, 414],
+    ]
+  },
+  "2026-06-08": {
+    pct: 38.6,
+    ctb: [
+      ['NU NB',           40.0, 5],
+      ['NU ACI ROAS_LOW', 60.0, 115],
+      ['NU ACI ROAS_TOP', 40.0, 115],
+      ['NU ACI INSTALL',  27.9, 68],
+      ['NU META',         26.5, 155],
+      ['* NU.ORG',        36.2, 414],
+    ]
+  },
+};
+
 const HIER_DATA = {"2026-06-01": {"chut_app (aos)_2025_무사고": {"무사고_260112(기존 고효율2 + 신규소재4)": {"ads": [], "cost": 0, "install": 1, "contact": 4, "cpi": 0, "cpa": 0, "cpm": null, "ctr": null}}, "chut_app_conversion (aos)": {"매물형": {"ads": [{"name": "인생첫차_사초생예산_260601", "cost": 56038, "install": 13, "contact": 0, "cpi": 4311, "cpa": null, "cpm": 12661, "ctr": 1.2, "flag": "keep"}, {"name": "무사고_최저가_영상_260601", "cost": 55184, "install": 10, "contact": 0, "cpi": 5518, "cpa": null, "cpm": 20824, "ctr": 0.53, "flag": "watch"}, {"name": "무사고_최저가SUV_B_이미지_260601", "cost": 566988, "install": 127, "contact": 5, "cpi": 4464, "cpa": 113398, "cpm": 11391, "ctr": 1.26, "flag": "keep"}, {"name": "인생첫차_사초생예산_캐러셀_이미지_260601", "cost": 103491, "install": 16, "contact": 0, "cpi": 6468, "cpa": null, "cpm": 13361, "ctr": 0.92, "flag": "replace"}], "cost": 781701, "install": 166, "contact": 5, "cpi": 4709, "cpa": 156340, "cpm": 12101, "ctr": 1.18}, "매물형_릴스": {"ads": [{"name": "SUV_가격대별_영상_260601", "cost": 1292965, "install": 326, "contact": 2, "cpi": 3966, "cpa": 646482, "cpm": 10401, "ctr": 0.72, "flag": "keep"}, {"name": "인기모델_가격대별_영상_260601", "cost": 95977, "install": 32, "contact": 1, "cpi": 2999, "cpa": 95977, "cpm": 10571, "ctr": 0.74, "flag": "keep"}], "cost": 1388942, "install": 358, "contact": 3, "cpi": 3880, "cpa": 462981, "cpm": 10412, "ctr": 0.72}}, "chut_app_install (aos)": {"매물형": {"ads": [{"name": "경차만큼싼_매물형기본_이미지_260601", "cost": 74015, "install": 19, "contact": 0, "cpi": 3896, "cpa": null, "cpm": 8150, "ctr": 1.24, "flag": "watch"}, {"name": "연식오래됐지만_A(0904)_이미지_260601", "cost": 91545, "install": 26, "contact": 0, "cpi": 3521, "cpa": null, "cpm": 6527, "ctr": 0.97, "flag": "keep"}, {"name": "가성비하차감_캐러셀_이미지_260601", "cost": 637953, "install": 175, "contact": 5, "cpi": 3645, "cpa": 127591, "cpm": 7662, "ctr": 1.23, "flag": "keep"}], "cost": 803513, "install": 220, "contact": 5, "cpi": 3652, "cpa": 160703, "cpm": 7554, "ctr": 1.2}, "브랜딩형": {"ads": [{"name": "마세요_판매가_국산차2_이미지_260601", "cost": 374249, "install": 142, "contact": 2, "cpi": 2636, "cpa": 187124, "cpm": 9962, "ctr": 1.63, "flag": "keep"}, {"name": "마세요_판매가_국산차1_이미지_260601", "cost": 25739, "install": 4, "contact": 0, "cpi": 6435, "cpa": null, "cpm": 7344, "ctr": 0.86, "flag": "replace"}], "cost": 399988, "install": 146, "contact": 2, "cpi": 2740, "cpa": 199994, "cpm": 9738, "ctr": 1.56}}, "chut_app (aos)_2025_인생첫차": {"인생첫차_260303(고효율)": {"ads": [], "cost": 0, "install": 1, "contact": 2, "cpi": 0, "cpa": 0, "cpm": null, "ctr": null}}}, "2026-06-08": {"chut_app_conversion (aos)": {"매물형": {"ads": [{"name": "인생첫차_사초생예산_캐러셀_이미지_260601", "cost": 4676, "install": 0, "contact": 0, "cpi": null, "cpa": null, "cpm": 8232, "ctr": 0.35, "flag": "watch"}, {"name": "무사고_최저가SUV_B_이미지_260601", "cost": 875028, "install": 194, "contact": 1, "cpi": 4510, "cpa": 875028, "cpm": 9502, "ctr": 1.05, "flag": "keep"}, {"name": "인생첫차_사초생예산_260601", "cost": 59301, "install": 26, "contact": 0, "cpi": 2281, "cpa": null, "cpm": 8321, "ctr": 1.04, "flag": "keep"}, {"name": "무사고_최저가_영상_260601", "cost": 10971, "install": 5, "contact": 0, "cpi": 2194, "cpa": null, "cpm": 14211, "ctr": 1.04, "flag": "keep"}], "cost": 949976, "install": 225, "contact": 1, "cpi": 4222, "cpa": 949976, "cpm": 9447, "ctr": 1.04}, "매물형_릴스": {"ads": [{"name": "SUV_가격대별_영상_260601", "cost": 1166998, "install": 274, "contact": 8, "cpi": 4259, "cpa": 145875, "cpm": 10779, "ctr": 0.73, "flag": "keep"}, {"name": "인기모델_가격대별_영상_260601", "cost": 94227, "install": 23, "contact": 0, "cpi": 4097, "cpa": null, "cpm": 8137, "ctr": 0.44, "flag": "keep"}], "cost": 1261225, "install": 297, "contact": 8, "cpi": 4247, "cpa": 157653, "cpm": 10523, "ctr": 0.7}}, "chut_app_install (aos)": {"매물형": {"ads": [{"name": "연식오래됐지만_A(0904)_이미지_260601", "cost": 36695, "install": 10, "contact": 0, "cpi": 3670, "cpa": null, "cpm": 6133, "ctr": 0.84, "flag": "keep"}, {"name": "경차만큼싼_매물형기본_이미지_260601", "cost": 28978, "install": 9, "contact": 0, "cpi": 3220, "cpa": null, "cpm": 6901, "ctr": 1.48, "flag": "keep"}, {"name": "가성비하차감_캐러셀_이미지_260601", "cost": 525578, "install": 141, "contact": 6, "cpi": 3728, "cpa": 87596, "cpm": 7466, "ctr": 1.19, "flag": "keep"}], "cost": 591251, "install": 160, "contact": 6, "cpi": 3695, "cpa": 98542, "cpm": 7338, "ctr": 1.18}, "브랜딩형": {"ads": [{"name": "마세요_판매가_국산차2_이미지_260601", "cost": 630506, "install": 183, "contact": 3, "cpi": 3445, "cpa": 210169, "cpm": 9923, "ctr": 1.69, "flag": "keep"}, {"name": "마세요_판매가_국산차1_이미지_260601", "cost": 1007, "install": 0, "contact": 0, "cpi": null, "cpa": null, "cpm": 8607, "ctr": 0.0, "flag": "watch"}], "cost": 631513, "install": 183, "contact": 3, "cpi": 3451, "cpa": 210504, "cpm": 9921, "ctr": 1.68}}}}
 ;
 
@@ -1037,20 +1064,31 @@ function renderOverview(w, isJuneOrLater) {
             '<div style="background:rgba(0,0,0,.04);border-radius:7px;padding:10px 12px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">일 목표 대비</div><div style="font-size:14px;font-weight:700;color:' + (dailyInstAvg>=dailyInstTarget?'#00ABFF':'#ff4668') + '">' + (Math.round((dailyInstAvg/dailyInstTarget-1)*1000)/10) + '%</div><div style="font-size:9px;color:var(--t3)">목표 ' + dailyInstTarget + '건/일</div></div>' +
           '</div>' +
         '</div>' +
-        // NU PAID 카드 (Amplitude 하드코딩 - 매주 업데이트)
-        '<div class="card">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
-            '<div><div style="font-size:11px;font-weight:600;color:var(--t2)">NU PAID 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI 458건 · <span style="color:#00ABFF;font-weight:600">Amplitude 기준</span></div></div>' +
-            '<div style="text-align:right"><div style="font-size:22px;font-weight:800;color:#00ABFF;letter-spacing:-1px">38.6%</div><div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + (Math.round((38.6-periodPct)*10)/10) + '%p</div></div>' +
-          '</div>' +
-          '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:10px;position:relative"><div style="height:100%;width:38.6%;background:#00ABFF;border-radius:3px"></div><div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div></div>' +
+        // NU PAID 카드 (주차별 고정값 - NU_PAID_DATA에서 로드)
+        (() => {
+          const nuData = NU_PAID_DATA[w.week_start] || NU_PAID_DATA[Object.keys(NU_PAID_DATA).sort().pop()];
+          const nuPct = nuData ? nuData.pct : null;
+          const nuCtb = nuData ? nuData.ctb : [];
+          const nuDiff = nuPct != null ? Math.round((nuPct - periodPct)*10)/10 : null;
+          const nuColor = nuPct != null ? (nuPct >= periodPct ? '#00ABFF' : '#ff4668') : '#94a3b8';
+          return '<div class="card">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
+              '<div><div style="font-size:11px;font-weight:600;color:var(--t2)">NU PAID 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI 458건 · <span style="color:#00ABFF;font-weight:600">Amplitude 기준</span></div></div>' +
+              '<div style="text-align:right"><div style="font-size:22px;font-weight:800;color:' + nuColor + ';letter-spacing:-1px">' + (nuPct != null ? nuPct+'%' : '—') + '</div>' +
+              '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + (nuDiff != null ? nuDiff+'%p' : '—') + '</div></div>' +
+            '</div>' +
+            '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:10px;position:relative">' +
+              (nuPct != null ? '<div style="height:100%;width:' + Math.min(nuPct,100) + '%;background:' + nuColor + ';border-radius:3px"></div>' : '') +
+              '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>' +
+            '</div>' +
           '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">매체별 (Amplitude)</div>' +
           '<div style="display:flex;flex-direction:column;gap:6px">' +
-            [['NU NB','40.0',5],['NU ACI ROAS_LOW','60.0',115],['NU ACI ROAS_TOP','40.0',115],['NU ACI INSTALL','27.9',68],['NU META','26.5',155]].map(([n,p2,kpi2])=>{
-              const c = parseFloat(p2) >= periodPct ? '#00ABFF' : '#ff4668';
-              return '<div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;font-weight:500;color:var(--t2);width:130px;flex-shrink:0">' + n + '</div><div style="flex:1;height:16px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + p2 + '%;background:' + c + ';border-radius:3px;min-width:2px"></div></div><div style="font-size:10px;font-weight:700;color:var(--t1);width:40px;text-align:right">' + p2 + '%</div><div style="font-size:9px;color:var(--t3);width:35px">/ ' + kpi2 + '</div></div>';
+            nuCtb.map(([n,p2,kpi2])=>{
+              const isOrg = n.startsWith('*');
+              const c = isOrg ? '#c0c8d8' : (p2 >= periodPct ? '#00ABFF' : '#ff4668');
+              const tc = isOrg ? 'var(--t3)' : 'var(--t1)';
+              return '<div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;font-weight:500;color:' + (isOrg?'var(--t3)':'var(--t2)') + ';width:130px;flex-shrink:0">' + n + '</div><div style="flex:1;height:16px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + Math.min(p2,100) + '%;background:' + c + ';border-radius:3px;min-width:2px"></div></div><div style="font-size:10px;font-weight:700;color:' + tc + ';width:40px;text-align:right">' + p2 + '%</div><div style="font-size:9px;color:var(--t3);width:35px">/ ' + kpi2 + '</div></div>';
             }).join('') +
-            '<div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;font-weight:500;color:var(--t3);width:130px;flex-shrink:0">* NU.ORG</div><div style="flex:1;height:16px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden"><div style="height:100%;width:36.2%;background:#c0c8d8;border-radius:3px;min-width:2px"></div></div><div style="font-size:10px;font-weight:700;color:var(--t3);width:40px;text-align:right">36.2%</div><div style="font-size:9px;color:var(--t3);width:35px">/ 414</div></div>' +
           '</div>' +
           '<div style="font-size:9px;color:var(--t3);margin-top:5px">* NU.ORG은 참고용</div>' +
         '</div>' +
