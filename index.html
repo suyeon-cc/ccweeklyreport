@@ -896,6 +896,65 @@ function renderOverview(w, isJuneOrLater) {
   }
 
   document.getElementById('overview-content').innerHTML = `
+    ${isJuneOrLater ? `
+    <div class="sec"><span class="sec-accent">KPI</span> 6월 진척률 — 기간 진척 23.3% (6/7 기준)</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div><div style="font-size:11px;font-weight:600;color:var(--t2)">예산 소진 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI 41,588,172원</div></div>
+          <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:#00ABFF;letter-spacing:-1px">23.6%</div><div style="font-size:9px;color:var(--t3)">기간 23.3% 대비 -0.5%p</div></div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">전체 9,485,907원</div>
+        <div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:10px;position:relative"><div style="height:100%;width:23.6%;background:#00ABFF;border-radius:3px"></div><div style="position:absolute;top:-3px;left:23.3%;height:11px;width:1.5px;background:var(--t2)"></div></div>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:10px">
+          ${[['GT_TOP','24.2%','#00ABFF'],['GT_LOW','24.2%','#00ABFF'],['GI_AOS','24.2%','#00ABFF'],['Meta_CPI','22.7%','#8AF293'],['Meta_CPA','22.6%','#8AF293']].map(([n,p,c])=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <span style="color:var(--t2);width:70px">${n}</span>
+            <div style="flex:1;height:4px;background:rgba(0,0,0,.06);border-radius:2px;position:relative"><div style="height:100%;width:${p};background:${c};border-radius:2px"></div><div style="position:absolute;top:-3px;left:23.3%;height:10px;width:1px;background:var(--t3)"></div></div>
+            <span style="font-weight:700;color:${c==='#00ABFF'?'#00ABFF':'#3a9e40'}">${p}</span>
+          </div>`).join('')}
+        </div>
+        <div style="font-size:10px;color:var(--t2);padding:7px 10px;background:rgba(0,171,255,.06);border-radius:5px;margin-top:10px;border-left:2px solid #00ABFF">
+          <span style="display:block">• 전 매체 기간 진척과 거의 일치</span><span style="display:block">• 예산 소진 속도 정상 운영 중</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div><div style="font-size:11px;font-weight:600;color:var(--t2)">Install KPI 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI 13,432건</div></div>
+          <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:#3a9e40;letter-spacing:-1px">21.3%</div><div style="font-size:9px;color:var(--t3)">기간 23.3% 대비 -2.0%p</div></div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">누계 2,859건 / 13,432건</div>
+        <div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:12px;position:relative"><div style="height:100%;width:21.3%;background:#8AF293;border-radius:3px"></div><div style="position:absolute;top:-3px;left:23.3%;height:11px;width:1.5px;background:var(--t2)"></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:rgba(0,0,0,.04);border-radius:7px;padding:10px 12px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">W23 합계</div><div style="font-size:14px;font-weight:700">2,859건</div><div style="font-size:9px;color:var(--t3)">일평균 408건/일</div></div>
+          <div style="background:rgba(0,0,0,.04);border-radius:7px;padding:10px 12px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">일 목표 대비</div><div style="font-size:14px;font-weight:700;color:#ff4668">-8.9%</div><div style="font-size:9px;color:var(--t3)">목표 448건/일 (÷30일)</div></div>
+        </div>
+        <div style="font-size:10px;color:var(--t2);padding:7px 10px;background:rgba(138,242,147,.1);border-radius:5px;border-left:2px solid #8AF293">
+          <span style="display:block">• 누계 기간 대비 -2.0%p 미달</span><span style="display:block">• 일평균 408건으로 목표(448건) 미달</span><span style="display:block">• 신규 캠페인 안정화 기간 감안 필요</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div><div style="font-size:11px;font-weight:600;color:var(--t2)">NU PAID 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI 458건 · <span style="color:#00ABFF;font-weight:600">Amplitude 기준</span></div></div>
+          <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:#ff4668;letter-spacing:-1px">38.6%</div><div style="font-size:9px;color:var(--t3)">NU.PAID · 기간 +15.3%p</div></div>
+        </div>
+        <div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:10px;position:relative"><div style="height:100%;width:38.6%;background:#ff4668;border-radius:3px"></div><div style="position:absolute;top:-3px;left:23.3%;height:11px;width:1.5px;background:var(--t2)"></div></div>
+        <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">매체별</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${[['NU NB','40.0%',5,'ok'],['NU ACI ROAS_LOW','60.0%',115,'ok'],['NU ACI ROAS_TOP','40.0%',115,'ok'],['NU ACI INSTALL','27.9%',68,'low'],['NU META','26.5%',155,'low'],['* NU.ORG','36.2%',414,'org']].map(([n,p,kpi,t])=>`
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="font-size:10px;font-weight:500;color:${t==='org'?'var(--t3)':'var(--t2)'};width:130px;flex-shrink:0">${n}</div>
+            <div style="flex:1;height:16px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden"><div style="height:100%;width:${p};background:${t==='ok'?'#00ABFF':t==='org'?'#c0c8d8':'#ff4668'};border-radius:3px;min-width:2px"></div></div>
+            <div style="font-size:10px;font-weight:700;color:var(--t1);width:40px;text-align:right">${p}</div>
+            <div style="font-size:9px;color:var(--t3);width:35px">/ ${kpi}</div>
+          </div>`).join('')}
+        </div>
+        <div style="font-size:9px;color:var(--t3);margin-top:5px">* NU.ORG은 참고용</div>
+        <div style="font-size:10px;color:var(--t2);padding:7px 10px;background:rgba(0,171,255,.06);border-radius:5px;margin-top:8px;border-left:2px solid #00ABFF">
+          <span style="display:block">• NU.PAID 177건 / KPI 458건 · 기간 대비 +15.3%p 상회</span><span style="display:block">• 전월 대비 GT 신규 분리 캠페인 CTB 전환 기여</span>
+        </div>
+      </div>
+    </div>` : ''}
     ${curIdx > 0 ? `
     <div class="sec"><span class="sec-accent">WoW</span> 볼륨 &amp; 효율 — 전 매체 합산</div>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px">
