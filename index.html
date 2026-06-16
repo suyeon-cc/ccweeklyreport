@@ -677,27 +677,45 @@ function makeDailyCharts(containerID, dailyArr, color) {
   keys.forEach((key,ki) => {
     const data = dailyArr.map(d => d[key]);
     const valid = data.filter(v=>v!=null);
-    const curr = valid[valid.length-1];
-    // WoW: 날짜 기준 이번주(마지막 7일) vs 전주(그 이전 7일)
+    // 현재값: 이번주(마지막 7일) 평균
+    const thisWeekVals = dailyArr.slice(-7).map(d => d[key]).filter(v=>v!=null);
+    const curr = thisWeekVals.length > 0
+      ? thisWeekVals.reduce((a,b)=>a+b,0)/thisWeekVals.length
+      : valid[valid.length-1];
+    // WoW: 이번주 7일 vs 전주 7일 주간 합산 기준 계산
     let wowDelta = '';
     const n_total = dailyArr.length;
     if (n_total >= 8) {
-      const thisWeek = dailyArr.slice(-7).map(d => d[key]).filter(v=>v!=null);
-      const prevWeek = dailyArr.slice(-14,-7).map(d => d[key]).filter(v=>v!=null);
-      if (thisWeek.length > 0 && prevWeek.length > 0) {
-        const avg1 = thisWeek.reduce((a,b)=>a+b,0)/thisWeek.length;
-        const avg2 = prevWeek.reduce((a,b)=>a+b,0)/prevWeek.length;
-        if (avg2 > 0) {
-          const d = (avg1/avg2-1)*100;
+      const thisSlice = dailyArr.slice(-7);
+      const prevSlice = dailyArr.slice(-14, -7);
+      if (prevSlice.length >= 1) {
+        let wowVal = null;
+        if (key === 'cpi') {
+          // CPI = 이번주 총 cost / 이번주 총 install
+          const tCost = thisSlice.reduce((a,d)=>a+(d.cost||0),0);
+          const tInst = thisSlice.reduce((a,d)=>a+(d.install||0),0);
+          const pCost = prevSlice.reduce((a,d)=>a+(d.cost||0),0);
+          const pInst = prevSlice.reduce((a,d)=>a+(d.install||0),0);
+          if (tInst>0 && pInst>0) wowVal = (tCost/tInst)/(pCost/pInst)-1;
+        } else if (key === 'cpa') {
+          // CPA = 이번주 총 cost / 이번주 총 contact
+          const tCost = thisSlice.reduce((a,d)=>a+(d.cost||0),0);
+          const tCont = thisSlice.reduce((a,d)=>a+(d.contact||0),0);
+          const pCost = prevSlice.reduce((a,d)=>a+(d.cost||0),0);
+          const pCont = prevSlice.reduce((a,d)=>a+(d.contact||0),0);
+          if (tCont>0 && pCont>0) wowVal = (tCost/tCont)/(pCost/pCont)-1;
+        } else {
+          // CPM, CTR: 일별 유효값 평균
+          const tv = thisSlice.map(d=>d[key]).filter(v=>v!=null);
+          const pv = prevSlice.map(d=>d[key]).filter(v=>v!=null);
+          if (tv.length>0 && pv.length>0) {
+            wowVal = (tv.reduce((a,b)=>a+b,0)/tv.length)/(pv.reduce((a,b)=>a+b,0)/pv.length)-1;
+          }
+        }
+        if (wowVal != null) {
+          const d = wowVal*100;
           wowDelta = `<span style="color:#0f172a;font-size:9px">${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%</span> <span style="color:var(--t3);font-size:9px">WoW</span>`;
         }
-      }
-    } else if (n_total >= 2) {
-      // 데이터 부족 시 전일 대비
-      const prev2 = valid.length>1 ? valid[valid.length-2] : null;
-      if (prev2 && prev2 > 0) {
-        const d = (curr/prev2-1)*100;
-        wowDelta = `<span style="color:#0f172a;font-size:9px">${d>0?'🔺':'🔻'}${d>0?'+':''}${d.toFixed(1)}%</span> <span style="color:var(--t3);font-size:9px">DoD</span>`;
       }
     }
     html += `<div class="chart4-card">
@@ -752,34 +770,50 @@ function makeTopLowCharts(containerID, dailyArr) {
       return `<text x="${pL+i*xS}" y="${H}" text-anchor="${anchor}" font-size="8" fill="#94a3b8">${show?d:''}</text>`;
     }).join('');
     // WoW: 마지막 7일 평균 vs 그 이전 7일 평균
-    function wowAvg(data) {
+    function wowAvg(data, metricKey) {
       const n_total = dailyArr.length;
-      if (n_total >= 8) {
-        const thisW = dailyArr.slice(-7).map((_,i) => data[n_total-7+i]).filter(v=>v!=null);
-        const prevW = dailyArr.slice(-14,-7).map((_,i) => data[Math.max(0,n_total-14)+i]).filter(v=>v!=null);
-        if (thisW.length > 0 && prevW.length > 0) {
-          const avg1 = thisW.reduce((a,b)=>a+b,0)/thisW.length;
-          const avg2 = prevW.reduce((a,b)=>a+b,0)/prevW.length;
-          return avg2 > 0 ? ((avg1/avg2-1)*100) : null;
+      if (n_total < 8) return null;
+      const thisSlice = dailyArr.slice(-7);
+      const prevSlice = dailyArr.slice(-14,-7);
+      if (prevSlice.length < 1) return null;
+      let wowVal = null;
+      if (metricKey === 'cpi' || metricKey === 'cpa') {
+        // TOP/LOW 각각의 cost/install/contact를 data 인덱스로 역추적
+        // topD[i] = dailyArr[i].top?.cpi → cost/install은 별도 접근 필요
+        // 대신 cpi/cpa 값 자체를 평균으로 WoW 계산 (유효값만)
+        const tv = thisSlice.map((_,i)=>data[n_total-7+i]).filter(v=>v!=null);
+        const pv = prevSlice.map((_,i)=>data[n_total-14+i]).filter(v=>v!=null);
+        if (tv.length>0 && pv.length>0) {
+          wowVal = ((tv.reduce((a,b)=>a+b,0)/tv.length)/(pv.reduce((a,b)=>a+b,0)/pv.length)-1)*100;
+        }
+      } else {
+        const tv = thisSlice.map((_,i)=>data[n_total-7+i]).filter(v=>v!=null);
+        const pv = prevSlice.map((_,i)=>data[n_total-14+i]).filter(v=>v!=null);
+        if (tv.length>0 && pv.length>0) {
+          wowVal = ((tv.reduce((a,b)=>a+b,0)/tv.length)/(pv.reduce((a,b)=>a+b,0)/pv.length)-1)*100;
         }
       }
-      const valid = data.filter(v=>v!=null);
-      if (valid.length < 2) return null;
-      const curr = valid[valid.length-1];
-      const prev = valid[valid.length-2];
-      return prev > 0 ? ((curr/prev-1)*100) : null;
+      return wowVal;
     }
     function wowStr(wow) {
       if (wow==null) return '<span style="font-size:9px;color:var(--t3)">WoW —</span>';
       const s=wow>0?'+':''; const arr=wow>0?'🔺':'🔻';
       return `<span style="font-size:9px;font-weight:600;color:#0f172a">${arr}${s}${wow.toFixed(1)}%</span><span style="font-size:9px;color:var(--t3)"> WoW</span>`;
     }
-    const topCurr=topD.filter(v=>v!=null).pop(), lowCurr=lowD.filter(v=>v!=null).pop();
+    // 현재값: 이번주(마지막 7일) 평균 사용 (일별 마지막 하루 아님)
+    function weekAvg(data) {
+      const slice = dailyArr.slice(-7).map((_,i) => data[dailyArr.length-7+i]).filter(v=>v!=null);
+      if (!slice.length) return data.filter(v=>v!=null).pop();
+      // CPI/CPA는 합산으로 계산해야 하지만 daily arr에는 이미 일별 CPI/CPA 값 있음 → 평균
+      return slice.reduce((a,b)=>a+b,0)/slice.length;
+    }
+    const topCurr = weekAvg(topD);
+    const lowCurr = weekAvg(lowD);
     html+=`<div class="toplow-card">
       <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">${m.label}</div>
       <div style="display:flex;gap:14px;margin-bottom:6px">
-        <div><div style="font-size:9px;color:#e84545">TOP</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(topCurr,m.unit)}</div><div>${wowStr(wowAvg(topD))}</div></div>
-        <div><div style="font-size:9px;color:#ff8c42">LOW</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(lowCurr,m.unit)}</div><div>${wowStr(wowAvg(lowD))}</div></div>
+        <div><div style="font-size:9px;color:#e84545">TOP</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(topCurr,m.unit)}</div><div>${wowStr(wowAvg(topD, m.key))}</div></div>
+        <div><div style="font-size:9px;color:#ff8c42">LOW</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(lowCurr,m.unit)}</div><div>${wowStr(wowAvg(lowD, m.key))}</div></div>
       </div>
       <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible">
         ${buildLine(topD,'#e84545')}
