@@ -461,25 +461,30 @@ function setLoadMsg(msg) {
 
 async function loadData() {
   try {
+    const t0 = Date.now();
     setLoadMsg('데이터 불러오는 중...');
     const raw = await fetchAllData();
+    console.log('✅ fetchAllData:', Date.now()-t0, 'ms');
+    setLoadMsg('데이터 변환 중...');
     DAILY.gt  = convertSheet(raw.gt  || {});
     DAILY.gi  = convertSheet(raw.gi  || {});
     DAILY.fbi = convertSheet(raw.fbi || {});
     DAILY.fbc = convertSheet(raw.fbc || {});
     DAILY.top = convertSheet(raw.top || {});
     DAILY.low = convertSheet(raw.low || {});
-
+    console.log('✅ convertSheet:', Date.now()-t0, 'ms');
     setLoadMsg('집계 처리 중...');
     const gt_w  = aggregateWeekly(DAILY.gt);
     const gi_w  = aggregateWeekly(DAILY.gi);
     const fbi_w = aggregateWeekly(DAILY.fbi);
     WEEKS = buildWeekList(gt_w, gi_w, fbi_w);
-
+    console.log('✅ buildWeekList:', Date.now()-t0, 'ms');
     dataLoaded = true;
     curIdx = WEEKS.length - 1;
     initDropdown();
+    console.log('✅ initDropdown:', Date.now()-t0, 'ms');
     updateAll();
+    console.log('✅ updateAll:', Date.now()-t0, 'ms');
   } catch(e) {
     console.error('데이터 로드 실패:', e);
     document.getElementById('overview-content').innerHTML =
