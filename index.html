@@ -638,6 +638,58 @@ function fmtDelta(curr, prev) {
 }
 function N(v,u='') { return v==null?'—':Math.round(v).toLocaleString('ko')+u; }
 
+
+function makeTopLowWeeklyCharts(containerID) {
+  const el = document.getElementById(containerID); if(!el) return;
+  let wks = WEEKS.slice(0, curIdx + 1);
+  if (wks.length > 12) wks = wks.slice(-12);
+  const labels = wks.map(w => w.label.split(' ')[0]);
+  const metrics = [{key:'cpm',label:'CPM',unit:'원'},{key:'ctr',label:'CTR',unit:'%'},{key:'cpi',label:'CPI',unit:'원'},{key:'cpa',label:'CPA',unit:'원'}];
+  let html = '';
+  metrics.forEach(m => {
+    const topD = wks.map(w => {
+      const td = getWeekDaily(DAILY.top, w.week_start, w.week_end);
+      let c=0,i=0,ct=0,im=0,cl=0;
+      td.forEach(d=>{c+=d.cost;i+=d.install;ct+=d.contact;im+=d.imps||0;cl+=d.clicks||0;});
+      if (m.key==='cpi') return i>0?Math.round(c/i):null;
+      if (m.key==='cpa') return ct>0?Math.round(c/ct):null;
+      if (m.key==='cpm') return im>0?Math.round(c/im*1000):null;
+      if (m.key==='ctr') return im>0?parseFloat((cl/im*100).toFixed(2)):null;
+      return null;
+    });
+    const lowD = wks.map(w => {
+      const ld = getWeekDaily(DAILY.low, w.week_start, w.week_end);
+      let c=0,i=0,ct=0,im=0,cl=0;
+      ld.forEach(d=>{c+=d.cost;i+=d.install;ct+=d.contact;im+=d.imps||0;cl+=d.clicks||0;});
+      if (m.key==='cpi') return i>0?Math.round(c/i):null;
+      if (m.key==='cpa') return ct>0?Math.round(c/ct):null;
+      if (m.key==='cpm') return im>0?Math.round(c/im*1000):null;
+      if (m.key==='ctr') return im>0?parseFloat((cl/im*100).toFixed(2)):null;
+      return null;
+    });
+    const topCurr = topD.filter(v=>v!=null).pop();
+    const lowCurr = lowD.filter(v=>v!=null).pop();
+    const topPrev = topD.filter(v=>v!=null).slice(-2)[0];
+    const lowPrev = lowD.filter(v=>v!=null).slice(-2)[0];
+    function wowStr(curr, prev) {
+      if (!curr||!prev||prev===0) return '';
+      const d=(curr/prev-1)*100;
+      return ' <span style="font-size:9px;color:#0f172a">' + (d>0?'🔺':'🔻') + (d>0?'+':'') + d.toFixed(1) + '%</span><span style="font-size:9px;color:var(--t3)"> WoW</span>';
+    }
+    html += '<div class="toplow-card">'
+      + '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">' + m.label + '</div>'
+      + '<div style="display:flex;gap:14px;margin-bottom:6px">'
+        + '<div><div style="font-size:9px;color:#e84545">TOP</div><div style="font-size:14px;font-weight:800;color:var(--t1)">' + fmtV(topCurr,m.unit) + '</div><div>' + wowStr(topCurr,topPrev) + '</div></div>'
+        + '<div><div style="font-size:9px;color:#ff8c42">LOW</div><div style="font-size:14px;font-weight:800;color:var(--t1)">' + fmtV(lowCurr,m.unit) + '</div><div>' + wowStr(lowCurr,lowPrev) + '</div></div>'
+      + '</div>'
+      + sparkLine(topD, '#e84545', labels, m.unit)
+      + sparkLine(lowD, '#ff8c42', labels, m.unit)
+      + '<div class="tl-legend"><div class="tl-leg-item"><div class="tl-dot" style="background:#e84545"></div>TOP</div><div class="tl-leg-item"><div class="tl-dot" style="background:#ff8c42"></div>LOW</div></div>'
+    + '</div>';
+  });
+  el.innerHTML = html;
+}
+
 function make4Charts(containerID, srcKey, color, last12=true) {
   const el = document.getElementById(containerID); if(!el) return;
   // 선택 주차까지만 (curIdx+1개), 최대 12주
@@ -842,7 +894,7 @@ function getWeekDaily(dailyMap, ws, we) {
     .map(([d, v]) => ({
       label: fmtMMDD(d), date: d,
       cpm: v.cpm, ctr: v.ctr, cpi: v.cpi, cpa: v.cpa,
-      cost: v.cost, install: v.install, contact: v.contact
+      cost: v.cost, imps: v.imps, clicks: v.clicks, install: v.install, contact: v.contact
     }));
 }
 
@@ -937,7 +989,9 @@ function renderOverview(w, isJuneOrLater) {
 
   // 캠페인 테이블
   // 6월 이후: 6/1부터 선택 주차 마지막날까지 전체 daily
+  // FBC: 6/1~선택주차 누계 (캠페인 테이블용)
   const fbcDaily = isJuneOrLater ? getWeekDaily(DAILY.fbc, '2026-06-01', w.week_end) : [];
+  // TOP/LOW: 선택주차 한 주간 (캠페인 테이블용)
   const topDaily = isJuneOrLater ? getWeekDaily(DAILY.top, w.week_start, w.week_end) : [];
   const lowDaily = isJuneOrLater ? getWeekDaily(DAILY.low, w.week_start, w.week_end) : [];
   let fbcCost=0,fbcInst=0,fbcCont=0; fbcDaily.forEach(d=>{fbcCost+=d.cost;fbcInst+=d.install;fbcCont+=d.contact;});
@@ -1241,7 +1295,10 @@ function renderOverview(w, isJuneOrLater) {
 ══════════════════════════════════════════ */
 function renderGoogle(w, isJuneOrLater) {
   // 6월 이후: 6/1부터 선택 주차 마지막날까지 전체 daily
+  // TOP/LOW: 24주차까지 daily, 25주차부터 weekly
+  const TOPLOWDAILY_MAX_WEEK = 24;
   const topLowDaily = isJuneOrLater ? getTopLowDaily('2026-06-01', w.week_end) : [];
+  const useTopLowWeekly = w.isoWeek > TOPLOWDAILY_MAX_WEEK;
   // 선택 주차까지 daily 배열 생성 (차트용)
   const giDailyArr  = getWeekDaily(DAILY.gi,  w.week_start, w.week_end);
   const gtDailyArr  = getWeekDaily(DAILY.gt,  w.week_start, w.week_end);
@@ -1286,14 +1343,24 @@ function renderGoogle(w, isJuneOrLater) {
     make4Charts('gi-charts', 'gi', '#465fff');
     make4Charts('gt-charts', 'gt', '#ff46c4');
   }
-  if (isJuneOrLater) makeTopLowCharts('toplow-charts', topLowDaily);
+  if (isJuneOrLater) {
+    if (useTopLowWeekly) {
+      // 25주차부터: 최근 12주 weekly 차트 2개(TOP, LOW)
+      makeTopLowWeeklyCharts('toplow-charts');
+    } else {
+      makeTopLowCharts('toplow-charts', topLowDaily);
+    }
+  }
 }
 
 /* ══════════════════════════════════════════
    RENDER META
 ══════════════════════════════════════════ */
 function renderMeta(w, isJuneOrLater) {
-  const fbcDaily = isJuneOrLater ? getWeekDaily(DAILY.fbc, w.week_start, w.week_end) : [];
+  // FBC 차트: 24주차까지 daily(6/1~), 25주차부터 weekly
+  const FBC_DAILY_MAX_WEEK = 24;
+  const useFbcWeekly = w.isoWeek > FBC_DAILY_MAX_WEEK;
+  const fbcDailyChart = isJuneOrLater ? getWeekDaily(DAILY.fbc, '2026-06-01', w.week_end) : [];
   const fbiDailyArr = getWeekDaily(DAILY.fbi, w.week_start, w.week_end);
   const hierWeekKey = isJuneOrLater ? w.week_start : null;
   const weekCount = curIdx + 1;
@@ -1339,7 +1406,13 @@ function renderMeta(w, isJuneOrLater) {
   } else {
     make4Charts('fbi-charts', 'fbi', '#465fff');
   }
-  if (isJuneOrLater) makeDailyCharts('fbc-charts', fbcDaily, '#ff46c4');
+  if (isJuneOrLater) {
+    if (useFbcWeekly) {
+      make4Charts('fbc-charts', 'fbc', '#ff46c4');
+    } else {
+      makeDailyCharts('fbc-charts', fbcDailyChart, '#ff46c4');
+    }
+  }
 
   if (isJuneOrLater) {
     renderInsight(w.week_start);
