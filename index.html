@@ -983,178 +983,174 @@ function renderOverview(w, isJuneOrLater) {
     return curr > prevVal ? 'td-bd' : 'td-ok';
   }
 
-  // innerHTML 조각 조합 (SyntaxError 방지)
+  // innerHTML 조각 조합
   let _html = '';
+
   if (isJuneOrLater) {
-    // ── KPI 자동 계산 ──
-      const KPI_BUDGET = { gt_top:10200000, gt_low:10200000, gi:4891410, meta_i:5296752, meta_c:9600000, total:41588172 };
-      const KPI_INSTALL = 13432;
-      const JUNE_DAYS = 30;
+    const KPI_BUDGET = { gt_top:10200000, gt_low:10200000, gi:4891410, meta_i:5296752, meta_c:9600000, total:41588172 };
+    const KPI_INSTALL = 13432;
+    const JUNE_DAYS = 30;
+    const june1 = new Date('2026-06-01');
+    const weekEndDate = new Date(w.week_end);
+    const elapsedDays = Math.round((weekEndDate - june1) / 86400000) + 1;
+    const periodPct = Math.round(elapsedDays / JUNE_DAYS * 1000) / 10;
 
-      // 기간 진척률: 6월 1일부터 선택 주차 마지막날까지
-      const june1 = new Date('2026-06-01');
-      const weekEndDate = new Date(w.week_end);
-      const elapsedDays = Math.round((weekEndDate - june1) / 86400000) + 1;
-      const periodPct = Math.round(elapsedDays / JUNE_DAYS * 1000) / 10;
+    let cumTop=0,cumLow=0,cumGi=0,cumFbi=0,cumFbc=0,cumInstGt=0,cumInstGi=0,cumInstFbi=0,cumInstFbc=0;
+    Object.entries(DAILY.top).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end) cumTop+=v.cost; });
+    Object.entries(DAILY.low).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end) cumLow+=v.cost; });
+    Object.entries(DAILY.gi).forEach(([d,v])  => { if(d>='2026-06-01'&&d<=w.week_end){ cumGi+=v.cost; cumInstGi+=v.install; }});
+    Object.entries(DAILY.fbi).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){ cumFbi+=v.cost; cumInstFbi+=v.install; }});
+    Object.entries(DAILY.fbc).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){ cumFbc+=v.cost; cumInstFbc+=v.install; }});
+    Object.entries(DAILY.gt).forEach(([d,v])  => { if(d>='2026-06-01'&&d<=w.week_end) cumInstGt+=v.install; });
 
-      // 누계 cost (6/1~선택주차 마지막날)
-      let cumTop=0, cumLow=0, cumGi=0, cumFbi=0, cumFbc=0, cumInstGt=0, cumInstGi=0, cumInstFbi=0, cumInstFbc=0;
-      Object.entries(DAILY.top).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){cumTop+=v.cost;} });
-      Object.entries(DAILY.low).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){cumLow+=v.cost;} });
-      Object.entries(DAILY.gi).forEach(([d,v])  => { if(d>='2026-06-01'&&d<=w.week_end){cumGi+=v.cost; cumInstGi+=v.install;} });
-      Object.entries(DAILY.fbi).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){cumFbi+=v.cost; cumInstFbi+=v.install;} });
-      Object.entries(DAILY.fbc).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){cumFbc+=v.cost; cumInstFbc+=v.install;} });
-      Object.entries(DAILY.gt).forEach(([d,v])  => { if(d>='2026-06-01'&&d<=w.week_end){cumInstGt+=v.install;} });
+    const cumTotal = cumTop+cumLow+cumGi+cumFbi+cumFbc;
+    const cumInstTotal = cumInstGt+cumInstGi+cumInstFbi+cumInstFbc;
+    const dailyInstAvg = elapsedDays > 0 ? Math.round(cumInstTotal/elapsedDays) : 0;
+    const dailyInstTarget = Math.round(KPI_INSTALL/JUNE_DAYS);
 
-      const cumTotal = cumTop+cumLow+cumGi+cumFbi+cumFbc;
-      const cumInstTotal = cumInstGt+cumInstGi+cumInstFbi+cumInstFbc;
-      const dailyInstAvg = elapsedDays > 0 ? Math.round(cumInstTotal/elapsedDays) : 0;
-      const dailyInstTarget = Math.round(KPI_INSTALL/JUNE_DAYS);
+    function pct(v, kpi) { return Math.round(v/kpi*1000)/10; }
+    const p = {
+      total:   pct(cumTotal, KPI_BUDGET.total),
+      gt_top:  pct(cumTop,   KPI_BUDGET.gt_top),
+      gt_low:  pct(cumLow,   KPI_BUDGET.gt_low),
+      gi:      pct(cumGi,    KPI_BUDGET.gi),
+      meta_i:  pct(cumFbi,   KPI_BUDGET.meta_i),
+      meta_c:  pct(cumFbc,   KPI_BUDGET.meta_c),
+      install: pct(cumInstTotal, KPI_INSTALL),
+    };
 
-      // 진척률 계산
-      function pct(v, kpi) { return Math.round(v/kpi*1000)/10; }
-      const p = {
-        total:   pct(cumTotal, KPI_BUDGET.total),
-        gt_top:  pct(cumTop,   KPI_BUDGET.gt_top),
-        gt_low:  pct(cumLow,   KPI_BUDGET.gt_low),
-        gi:      pct(cumGi,    KPI_BUDGET.gi),
-        meta_i:  pct(cumFbi,   KPI_BUDGET.meta_i),
-        meta_c:  pct(cumFbc,   KPI_BUDGET.meta_c),
-        install: pct(cumInstTotal, KPI_INSTALL),
-        inst_gt: pct(cumInstGt+cumInstGi, KPI_BUDGET.gt_top+KPI_BUDGET.gt_low > 0 ? KPI_INSTALL*0.55 : 1),
-        inst_gi:  pct(cumInstGi,  KPI_INSTALL*0.15),
-        inst_fbi: pct(cumInstFbi, KPI_INSTALL*0.15),
-        inst_fbc: pct(cumInstFbc, KPI_INSTALL*0.10),
-      };
+    const bColor = p.total >= periodPct ? '#00ABFF' : (p.total >= periodPct-3 ? '#8AF293' : '#ff4668');
+    const iColor = p.install >= periodPct ? '#00ABFF' : (p.install >= periodPct-3 ? '#8AF293' : '#ff4668');
 
-      // 진척 바 컴포넌트
-      function progBar(label, val, kpi, pctVal, color) {
-        const diff = Math.round((pctVal - periodPct)*10)/10;
-        const diffStr = diff >= 0 ? '+'+diff+'%p' : diff+'%p';
-        const diffColor = diff >= 0 ? '#00ABFF' : '#ff4668';
-    _html += <div style="margin-bottom:6px">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">' +
-            '<span style="font-size:10px;color:var(--t2);width:80px">' + label + '</span>' +
-            '<div style="flex:1;height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin:0 8px;position:relative">' +
-              '<div style="height:100%;width:' + Math.min(pctVal,100) + '%;background:' + color + ';border-radius:3px"></div>' +
-              '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>' +
-            '</div>' +
-            '<span style="font-size:10px;font-weight:700;color:' + color + ';width:36px;text-align:right">' + pctVal + '%</span>' +
-          '</div>' +
-        '</div>';
-      }
+    function bar(lbl, pctVal, color) {
+      const barW = Math.min(pctVal, 100);
+      const markL = Math.min(periodPct, 100);
+      return '<div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px">'
+        + '<span style="font-size:10px;color:var(--t2);width:80px;flex-shrink:0">' + lbl + '</span>'
+        + '<div style="flex:1;height:5px;background:rgba(0,0,0,.06);border-radius:3px;position:relative">'
+        + '<div style="height:100%;width:' + barW + '%;background:' + color + ';border-radius:3px"></div>'
+        + '<div style="position:absolute;top:-3px;left:' + markL + '%;height:11px;width:1.5px;background:var(--t2)"></div>'
+        + '</div>'
+        + '<span style="font-size:10px;font-weight:700;color:' + color + ';width:36px;text-align:right">' + pctVal + '%</span>'
+        + '</div>';
+    }
 
-      // Install 진척 바 (매체별)
-      function instBar(label, cumVal, kpiVal, color) {
-        const pctVal = pct(cumVal, kpiVal);
-        const diff = Math.round((pctVal - periodPct)*10)/10;
-        return '<div style="margin-bottom:6px">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">' +
-            '<span style="font-size:10px;color:var(--t2);width:80px">' + label + '</span>' +
-            '<div style="flex:1;height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin:0 8px;position:relative">' +
-              '<div style="height:100%;width:' + Math.min(pctVal,100) + '%;background:' + color + ';border-radius:3px"></div>' +
-              '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>' +
-            '</div>' +
-            '<span style="font-size:10px;font-weight:700;color:' + color + ';width:36px;text-align:right">' + pctVal + '%</span>' +
-          '</div>' +
-        '</div>';
-      }
+    // NU PAID
+    const nuData = NU_PAID_DATA[w.week_start] || NU_PAID_DATA[Object.keys(NU_PAID_DATA).sort().pop()];
+    const nuPct = nuData ? nuData.pct : null;
+    const nuCtb = nuData ? nuData.ctb : [];
+    const nuDiff = nuPct != null ? Math.round((nuPct - periodPct)*10)/10 : null;
+    const nuColor = nuPct != null ? (nuPct >= periodPct ? '#00ABFF' : '#ff4668') : '#94a3b8';
 
-      const totalBudgetColor = p.total >= periodPct ? '#00ABFF' : (p.total >= periodPct-3 ? '#8AF293' : '#ff4668');
-      const totalInstColor   = p.install >= periodPct ? '#00ABFF' : (p.install >= periodPct-3 ? '#8AF293' : '#ff4668');
+    let nuBars = '';
+    nuCtb.forEach(function(item) {
+      const n = item[0], p2 = item[1], kpi2 = item[2];
+      const isOrg = n.startsWith('*');
+      const c = isOrg ? '#c0c8d8' : (p2 >= periodPct ? '#00ABFF' : '#ff4668');
+      nuBars += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+        + '<div style="font-size:10px;color:' + (isOrg?'var(--t3)':'var(--t2)') + ';width:130px;flex-shrink:0">' + n + '</div>'
+        + '<div style="flex:1;height:16px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden">'
+        + '<div style="height:100%;width:' + Math.min(p2,100) + '%;background:' + c + ';border-radius:3px;min-width:2px"></div>'
+        + '</div>'
+        + '<div style="font-size:10px;font-weight:700;color:' + (isOrg?'var(--t3)':'var(--t1)') + ';width:40px;text-align:right">' + p2 + '%</div>'
+        + '<div style="font-size:9px;color:var(--t3);width:35px">/ ' + kpi2 + '</div>'
+        + '</div>';
+    });
 
-      return '<div class="sec"><span class="sec-accent">KPI</span> 6월 진척률 — 기간 진척 ' + periodPct + '% (' + elapsedDays + '일/' + JUNE_DAYS + '일 기준)</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">' +
-        // 예산 카드
-        '<div class="card">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
-            '<div><div style="font-size:11px;font-weight:600;color:var(--t2)">예산 소진 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI 41,588,172원</div></div>' +
-            '<div style="text-align:right"><div style="font-size:22px;font-weight:800;color:' + totalBudgetColor + ';letter-spacing:-1px">' + p.total + '%</div>' +
-            '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + (Math.round((p.total-periodPct)*10)/10) + '%p</div></div>' +
-          '</div>' +
-          '<div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">전체 ' + Math.round(cumTotal).toLocaleString('ko') + '원</div>' +
-          '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:12px;position:relative">' +
-            '<div style="height:100%;width:' + Math.min(p.total,100) + '%;background:' + totalBudgetColor + ';border-radius:3px"></div>' +
-            '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>' +
-          '</div>' +
-          progBar('GT_TOP', cumTop, KPI_BUDGET.gt_top, p.gt_top, p.gt_top>=periodPct?'#00ABFF':'#8AF293') +
-          progBar('GT_LOW', cumLow, KPI_BUDGET.gt_low, p.gt_low, p.gt_low>=periodPct?'#00ABFF':'#8AF293') +
-          progBar('GI_AOS', cumGi, KPI_BUDGET.gi, p.gi, p.gi>=periodPct?'#00ABFF':'#8AF293') +
-          progBar('Meta_CPI', cumFbi, KPI_BUDGET.meta_i, p.meta_i, p.meta_i>=periodPct?'#00ABFF':'#8AF293') +
-          progBar('Meta_CPA', cumFbc, KPI_BUDGET.meta_c, p.meta_c, p.meta_c>=periodPct?'#00ABFF':'#8AF293') +
-        '</div>' +
-        // Install 카드
-        '<div class="card">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
-            '<div><div style="font-size:11px;font-weight:600;color:var(--t2)">Install KPI 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI ' + KPI_INSTALL.toLocaleString('ko') + '건</div></div>' +
-            '<div style="text-align:right"><div style="font-size:22px;font-weight:800;color:' + totalInstColor + ';letter-spacing:-1px">' + p.install + '%</div>' +
-            '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + (Math.round((p.install-periodPct)*10)/10) + '%p</div></div>' +
-          '</div>' +
-          '<div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">누계 ' + cumInstTotal.toLocaleString('ko') + '건 / ' + KPI_INSTALL.toLocaleString('ko') + '건</div>' +
-          '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:12px;position:relative">' +
-            '<div style="height:100%;width:' + Math.min(p.install,100) + '%;background:' + totalInstColor + ';border-radius:3px"></div>' +
-            '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>' +
-          '</div>' +
-          instBar('GT전체', cumInstGt, KPI_INSTALL, '#ff46c4') +
-          instBar('GI_AOS', cumInstGi, KPI_INSTALL, '#465fff') +
-          instBar('FB_Install', cumInstFbi, KPI_INSTALL, '#465fff') +
-          instBar('FB_CPA', cumInstFbc, KPI_INSTALL, '#ff46c4') +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">' +
-            '<div style="background:rgba(0,0,0,.04);border-radius:7px;padding:10px 12px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">누계 합계</div><div style="font-size:14px;font-weight:700">' + cumInstTotal.toLocaleString('ko') + '건</div><div style="font-size:9px;color:var(--t3)">일평균 ' + dailyInstAvg + '건/일</div></div>' +
-            '<div style="background:rgba(0,0,0,.04);border-radius:7px;padding:10px 12px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">일 목표 대비</div><div style="font-size:14px;font-weight:700;color:' + (dailyInstAvg>=dailyInstTarget?'#00ABFF':'#ff4668') + '">' + (Math.round((dailyInstAvg/dailyInstTarget-1)*1000)/10) + '%</div><div style="font-size:9px;color:var(--t3)">목표 ' + dailyInstTarget + '건/일</div></div>' +
-          '</div>' +
-        '</div>' +
-        // NU PAID 카드 (주차별 고정값 - NU_PAID_DATA에서 로드)
-        (() => {
-          const nuData = NU_PAID_DATA[w.week_start] || NU_PAID_DATA[Object.keys(NU_PAID_DATA).sort().pop()];
-          const nuPct = nuData ? nuData.pct : null;
-          const nuCtb = nuData ? nuData.ctb : [];
-          const nuDiff = nuPct != null ? Math.round((nuPct - periodPct)*10)/10 : null;
-          const nuColor = nuPct != null ? (nuPct >= periodPct ? '#00ABFF' : '#ff4668') : '#94a3b8';
-          return '<div class="card">' +
-            '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
-              '<div><div style="font-size:11px;font-weight:600;color:var(--t2)">NU PAID 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI 458건 · <span style="color:#00ABFF;font-weight:600">Amplitude 기준</span></div></div>' +
-              '<div style="text-align:right"><div style="font-size:22px;font-weight:800;color:' + nuColor + ';letter-spacing:-1px">' + (nuPct != null ? nuPct+'%' : '—') + '</div>' +
-              '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + (nuDiff != null ? nuDiff+'%p' : '—') + '</div></div>' +
-            '</div>' +
-            '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:10px;position:relative">' +
-              (nuPct != null ? '<div style="height:100%;width:' + Math.min(nuPct,100) + '%;background:' + nuColor + ';border-radius:3px"></div>' : '') +
-              '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>' +
-            '</div>' +
-          '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">매체별 (Amplitude)</div>' +
-          '<div style="display:flex;flex-direction:column;gap:6px">' +
-            nuCtb.map(([n,p2,kpi2])=>{
-              const isOrg = n.startsWith('*');
-              const c = isOrg ? '#c0c8d8' : (p2 >= periodPct ? '#00ABFF' : '#ff4668');
-              const tc = isOrg ? 'var(--t3)' : 'var(--t1)';
-              return '<div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;font-weight:500;color:' + (isOrg?'var(--t3)':'var(--t2)') + ';width:130px;flex-shrink:0">' + n + '</div><div style="flex:1;height:16px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + Math.min(p2,100) + '%;background:' + c + ';border-radius:3px;min-width:2px"></div></div><div style="font-size:10px;font-weight:700;color:' + tc + ';width:40px;text-align:right">' + p2 + '%</div><div style="font-size:9px;color:var(--t3);width:35px">/ ' + kpi2 + '</div></div>';
-            }).join('') +
-          '</div>' +
-          '<div style="font-size:9px;color:var(--t3);margin-top:5px">* NU.ORG은 참고용</div>' +
-        '</div>' +
-      '</div>';
+    _html += '<div class="sec"><span class="sec-accent">KPI</span> 6월 진척률 — 기간 진척 ' + periodPct + '% (' + elapsedDays + '일/' + JUNE_DAYS + '일 기준)</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">'
+      // 예산 카드
+      + '<div class="card">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
+          + '<div><div style="font-size:11px;font-weight:600;color:var(--t2)">예산 소진 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI 41,588,172원</div></div>'
+          + '<div style="text-align:right"><div style="font-size:22px;font-weight:800;color:' + bColor + ';letter-spacing:-1px">' + p.total + '%</div>'
+          + '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + Math.round((p.total-periodPct)*10)/10 + '%p</div></div>'
+        + '</div>'
+        + '<div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">전체 ' + Math.round(cumTotal).toLocaleString('ko') + '원</div>'
+        + '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:12px;position:relative">'
+          + '<div style="height:100%;width:' + Math.min(p.total,100) + '%;background:' + bColor + ';border-radius:3px"></div>'
+          + '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>'
+        + '</div>'
+        + bar('GT_TOP',  p.gt_top,  p.gt_top>=periodPct?'#00ABFF':'#8AF293')
+        + bar('GT_LOW',  p.gt_low,  p.gt_low>=periodPct?'#00ABFF':'#8AF293')
+        + bar('GI_AOS',  p.gi,      p.gi>=periodPct?'#00ABFF':'#8AF293')
+        + bar('Meta_CPI',p.meta_i,  p.meta_i>=periodPct?'#00ABFF':'#8AF293')
+        + bar('Meta_CPA',p.meta_c,  p.meta_c>=periodPct?'#00ABFF':'#8AF293')
+      + '</div>'
+      // Install 카드
+      + '<div class="card">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
+          + '<div><div style="font-size:11px;font-weight:600;color:var(--t2)">Install KPI 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI ' + KPI_INSTALL.toLocaleString('ko') + '건</div></div>'
+          + '<div style="text-align:right"><div style="font-size:22px;font-weight:800;color:' + iColor + ';letter-spacing:-1px">' + p.install + '%</div>'
+          + '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + Math.round((p.install-periodPct)*10)/10 + '%p</div></div>'
+        + '</div>'
+        + '<div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">누계 ' + cumInstTotal.toLocaleString('ko') + '건 / ' + KPI_INSTALL.toLocaleString('ko') + '건</div>'
+        + '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:12px;position:relative">'
+          + '<div style="height:100%;width:' + Math.min(p.install,100) + '%;background:' + iColor + ';border-radius:3px"></div>'
+          + '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>'
+        + '</div>'
+        + bar('GT전체',   cumInstGt,  '#ff46c4')
+        + bar('GI_AOS',   cumInstGi,  '#465fff')
+        + bar('FB_Install',cumInstFbi,'#465fff')
+        + bar('FB_CPA',   cumInstFbc, '#ff46c4')
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
+          + '<div style="background:rgba(0,0,0,.04);border-radius:7px;padding:10px 12px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">누계 합계</div><div style="font-size:14px;font-weight:700">' + cumInstTotal.toLocaleString('ko') + '건</div><div style="font-size:9px;color:var(--t3)">일평균 ' + dailyInstAvg + '건/일</div></div>'
+          + '<div style="background:rgba(0,0,0,.04);border-radius:7px;padding:10px 12px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">일 목표 대비</div><div style="font-size:14px;font-weight:700;color:' + (dailyInstAvg>=dailyInstTarget?'#00ABFF':'#ff4668') + '">' + (Math.round((dailyInstAvg/dailyInstTarget-1)*1000)/10) + '%</div><div style="font-size:9px;color:var(--t3)">목표 ' + dailyInstTarget + '건/일</div></div>'
+        + '</div>'
+      + '</div>'
+      // NU PAID 카드
+      + '<div class="card">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+          + '<div><div style="font-size:11px;font-weight:600;color:var(--t2)">NU PAID 진척률</div><div style="font-size:9px;color:var(--t3)">6월 KPI 458건 · <span style="color:#00ABFF;font-weight:600">Amplitude 기준</span></div></div>'
+          + '<div style="text-align:right"><div style="font-size:22px;font-weight:800;color:' + nuColor + ';letter-spacing:-1px">' + (nuPct != null ? nuPct+'%' : '—') + '</div>'
+          + '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + (nuDiff != null ? nuDiff+'%p' : '—') + '</div></div>'
+        + '</div>'
+        + '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:10px;position:relative">'
+          + (nuPct != null ? '<div style="height:100%;width:' + Math.min(nuPct,100) + '%;background:' + nuColor + ';border-radius:3px"></div>' : '')
+          + '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>'
+        + '</div>'
+        + '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">매체별 (Amplitude)</div>'
+        + '<div>' + nuBars + '</div>'
+        + '<div style="font-size:9px;color:var(--t3);margin-top:5px">* NU.ORG은 참고용</div>'
+      + '</div>'
+    + '</div>';
   }
+
   if (curIdx > 0) {
-    _html += `<div class="sec"><span class="sec-accent">WoW</span> 볼륨 &amp; 효율 — 전 매체 합산</div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px">
-      ${wowCards.map(c => '<div class="wow-card"><div class="wow-lbl">' + c.lbl + '</div><div class="wow-val">' + c.val + '</div><div class="wow-deltas" id="wc-' + c.lbl.replace(/\s/g,'') + '"></div></div>').join('')}
-    </div>`;
+    _html += '<div class="sec"><span class="sec-accent">WoW</span> 볼륨 &amp; 효율 — 전 매체 합산</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px">'
+      + wowCards.map(function(c) {
+          return '<div class="wow-card"><div class="wow-lbl">' + c.lbl + '</div><div class="wow-val">' + c.val + '</div><div class="wow-deltas" id="wc-' + c.lbl.replace(/\s/g,'') + '"></div></div>';
+        }).join('')
+      + '</div>';
   }
-  _html += `<div class="sec"><span class="sec-accent">Campaign</span> 캠페인별 주간 효율</div>
-    <div class="card mb12">
-      <div class="ct">매체별 ${w.label} 지표</div>
-      <div class="cs">CPA = Cost ÷ CONTACT · CTR 소수점 2자리</div>
-      <div style="display:flex;gap:14px;margin-bottom:10px;font-size:10px">
-        <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4668"></span><span style="color:var(--t2)">CPI·CPA 전주 대비 상승</span></span>
-        <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00ABFF"></span><span style="color:var(--t2)">CPI·CPA 전주 대비 하락</span></span>
-      </div>
-      <table class="tbl">
-        <thead><tr><th>캠페인</th><th>유형</th><th class="r">Cost</th><th class="r">Install</th><th class="r">CPI</th><th class="r">Contact</th><th class="r">CPA</th><th class="r">CPM</th><th class="r">CTR</th>${isJuneOrLater ? '<th>판정</th>' : ''}</tr></thead>
-        <tbody>
-          ${campRows.map(r => '<tr><td class="cnm">' + r.nm + (r.tag ? '<span class="tag tag-new">' + r.tag + '</span>' : '') + '</td><td style="font-size:9px;color:var(--t3)">' + r.type + '</td><td class="td-r">' + (r.cost ? Math.round(r.cost).toLocaleString('ko') : '—') + '</td><td class="td-r">' + (r.inst != null ? Math.round(r.inst).toLocaleString('ko') : '—') + '</td><td class="' + cpiColorCls(r.cpi, r.prevCpi) + '">' + (r.cpi ? r.cpi.toLocaleString('ko') + '원' : '—') + '</td><td class="td-r">' + (r.cont != null ? Math.round(r.cont) + '건' : '—') + '</td><td class="' + cpiColorCls(r.cpa, r.prevCpa) + '">' + (r.cpa ? r.cpa.toLocaleString('ko') + '원' : '—') + '</td><td class="td-r">' + (r.cpm ? r.cpm.toLocaleString('ko') : '—') + '</td><td class="td-r">' + (r.ctr != null ? r.ctr.toFixed(2) + '%' : '—') + '</td>' + (isJuneOrLater && r.label ? '<td><span class="ob ' + r.badge + '">' + r.label + '</span></td>' : (isJuneOrLater ? '<td></td>' : '')) + '</tr>').join('')}
-        </tbody>
-      </table>
-    </div>`;
+
+  _html += '<div class="sec"><span class="sec-accent">Campaign</span> 캠페인별 주간 효율</div>'
+    + '<div class="card mb12">'
+      + '<div class="ct">매체별 ' + w.label + ' 지표</div>'
+      + '<div class="cs">CPA = Cost ÷ CONTACT · CTR 소수점 2자리</div>'
+      + '<div style="display:flex;gap:14px;margin-bottom:10px;font-size:10px">'
+        + '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4668"></span><span style="color:var(--t2)">CPI·CPA 전주 대비 상승</span></span>'
+        + '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00ABFF"></span><span style="color:var(--t2)">CPI·CPA 전주 대비 하락</span></span>'
+      + '</div>'
+      + '<table class="tbl"><thead><tr><th>캠페인</th><th>유형</th><th class="r">Cost</th><th class="r">Install</th><th class="r">CPI</th><th class="r">Contact</th><th class="r">CPA</th><th class="r">CPM</th><th class="r">CTR</th>' + (isJuneOrLater ? '<th>판정</th>' : '') + '</tr></thead><tbody>'
+      + campRows.map(function(r) {
+          return '<tr>'
+            + '<td class="cnm">' + r.nm + (r.tag ? '<span class="tag tag-new">' + r.tag + '</span>' : '') + '</td>'
+            + '<td style="font-size:9px;color:var(--t3)">' + r.type + '</td>'
+            + '<td class="td-r">' + (r.cost ? Math.round(r.cost).toLocaleString('ko') : '—') + '</td>'
+            + '<td class="td-r">' + (r.inst != null ? Math.round(r.inst).toLocaleString('ko') : '—') + '</td>'
+            + '<td class="' + cpiColorCls(r.cpi,r.prevCpi) + '">' + (r.cpi ? r.cpi.toLocaleString('ko')+'원' : '—') + '</td>'
+            + '<td class="td-r">' + (r.cont != null ? Math.round(r.cont)+'건' : '—') + '</td>'
+            + '<td class="' + cpiColorCls(r.cpa,r.prevCpa) + '">' + (r.cpa ? r.cpa.toLocaleString('ko')+'원' : '—') + '</td>'
+            + '<td class="td-r">' + (r.cpm ? r.cpm.toLocaleString('ko') : '—') + '</td>'
+            + '<td class="td-r">' + (r.ctr != null ? r.ctr.toFixed(2)+'%' : '—') + '</td>'
+            + (isJuneOrLater && r.label ? '<td><span class="ob ' + r.badge + '">' + r.label + '</span></td>' : (isJuneOrLater ? '<td></td>' : ''))
+            + '</tr>';
+        }).join('')
+      + '</tbody></table>'
+    + '</div>';
+
   document.getElementById('overview-content').innerHTML = _html
 
   // 6월 이후 판정 박스 추가
