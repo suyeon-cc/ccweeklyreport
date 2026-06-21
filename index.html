@@ -989,8 +989,8 @@ function renderOverview(w, isJuneOrLater) {
 
   // 캠페인 테이블
   // 6월 이후: 6/1부터 선택 주차 마지막날까지 전체 daily
-  // FBC: 6/1~선택주차 누계 (캠페인 테이블용)
-  const fbcDaily = isJuneOrLater ? getWeekDaily(DAILY.fbc, '2026-06-01', w.week_end) : [];
+  // FBC: 선택 주차 주간값 (캠페인 테이블용 - GT/GI/FBI와 동일 기준)
+  const fbcDaily = isJuneOrLater ? getWeekDaily(DAILY.fbc, w.week_start, w.week_end) : [];
   // TOP/LOW: 선택주차 한 주간 (캠페인 테이블용)
   const topDaily = isJuneOrLater ? getWeekDaily(DAILY.top, w.week_start, w.week_end) : [];
   const lowDaily = isJuneOrLater ? getWeekDaily(DAILY.low, w.week_start, w.week_end) : [];
