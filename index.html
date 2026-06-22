@@ -745,11 +745,23 @@ function makeDailyCharts(containerID, dailyArr, color) {
   keys.forEach((key,ki) => {
     const data = dailyArr.map(d => d[key]);
     const valid = data.filter(v=>v!=null);
-    // 현재값: 이번주(마지막 7일) 평균
-    const thisWeekVals = dailyArr.slice(-7).map(d => d[key]).filter(v=>v!=null);
-    const curr = thisWeekVals.length > 0
-      ? thisWeekVals.reduce((a,b)=>a+b,0)/thisWeekVals.length
-      : valid[valid.length-1];
+    // 현재값: CPI/CPA는 주간 합산 기준, CPM/CTR은 마지막 7일 평균
+    const thisSlice7 = dailyArr.slice(-7);
+    let curr;
+    if (key === 'cpi') {
+      const tCost = thisSlice7.reduce((a,d)=>a+(d.cost||0),0);
+      const tInst = thisSlice7.reduce((a,d)=>a+(d.install||0),0);
+      curr = tInst > 0 ? Math.round(tCost/tInst) : valid[valid.length-1];
+    } else if (key === 'cpa') {
+      const tCost = thisSlice7.reduce((a,d)=>a+(d.cost||0),0);
+      const tCont = thisSlice7.reduce((a,d)=>a+(d.contact||0),0);
+      curr = tCont > 0 ? Math.round(tCost/tCont) : valid[valid.length-1];
+    } else {
+      const thisWeekVals = thisSlice7.map(d => d[key]).filter(v=>v!=null);
+      curr = thisWeekVals.length > 0
+        ? thisWeekVals.reduce((a,b)=>a+b,0)/thisWeekVals.length
+        : valid[valid.length-1];
+    }
     // WoW: 이번주 7일 vs 전주 7일 주간 합산 기준 계산
     let wowDelta = '';
     const n_total = dailyArr.length;
@@ -869,14 +881,31 @@ function makeTopLowCharts(containerID, dailyArr) {
       return `<span style="font-size:9px;font-weight:600;color:#0f172a">${arr}${s}${wow.toFixed(1)}%</span><span style="font-size:9px;color:var(--t3)"> WoW</span>`;
     }
     // 현재값: 이번주(마지막 7일) 평균 사용 (일별 마지막 하루 아님)
-    function weekAvg(data) {
-      const slice = dailyArr.slice(-7).map((_,i) => data[dailyArr.length-7+i]).filter(v=>v!=null);
-      if (!slice.length) return data.filter(v=>v!=null).pop();
-      // CPI/CPA는 합산으로 계산해야 하지만 daily arr에는 이미 일별 CPI/CPA 값 있음 → 평균
-      return slice.reduce((a,b)=>a+b,0)/slice.length;
+    // 현재값: CPI/CPA는 주간 합산 기준
+    let topCurr, lowCurr;
+    if (m.key === 'cpi') {
+      const tSlice = dailyArr.slice(-7);
+      const topC = tSlice.reduce((a,d)=>a+(d.top?.cost||0),0);
+      const topI = tSlice.reduce((a,d)=>a+(d.top?.install||0),0);
+      const lowC = tSlice.reduce((a,d)=>a+(d.low?.cost||0),0);
+      const lowI = tSlice.reduce((a,d)=>a+(d.low?.install||0),0);
+      topCurr = topI > 0 ? Math.round(topC/topI) : topD.filter(v=>v!=null).pop();
+      lowCurr = lowI > 0 ? Math.round(lowC/lowI) : lowD.filter(v=>v!=null).pop();
+    } else if (m.key === 'cpa') {
+      const tSlice = dailyArr.slice(-7);
+      const topC = tSlice.reduce((a,d)=>a+(d.top?.cost||0),0);
+      const topCt = tSlice.reduce((a,d)=>a+(d.top?.contact||0),0);
+      const lowC = tSlice.reduce((a,d)=>a+(d.low?.cost||0),0);
+      const lowCt = tSlice.reduce((a,d)=>a+(d.low?.contact||0),0);
+      topCurr = topCt > 0 ? Math.round(topC/topCt) : topD.filter(v=>v!=null).pop();
+      lowCurr = lowCt > 0 ? Math.round(lowC/lowCt) : lowD.filter(v=>v!=null).pop();
+    } else {
+      const tSlice = dailyArr.slice(-7);
+      const tVals = tSlice.map((_,i)=>topD[dailyArr.length-7+i]).filter(v=>v!=null);
+      const lVals = tSlice.map((_,i)=>lowD[dailyArr.length-7+i]).filter(v=>v!=null);
+      topCurr = tVals.length ? tVals.reduce((a,b)=>a+b,0)/tVals.length : topD.filter(v=>v!=null).pop();
+      lowCurr = lVals.length ? lVals.reduce((a,b)=>a+b,0)/lVals.length : lowD.filter(v=>v!=null).pop();
     }
-    const topCurr = weekAvg(topD);
-    const lowCurr = weekAvg(lowD);
     html+=`<div class="toplow-card">
       <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">${m.label}</div>
       <div style="display:flex;gap:14px;margin-bottom:6px">
