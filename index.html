@@ -279,45 +279,45 @@ const NU_PAID_DATA = {
   "2026-06-01": {
     pct: 23.3,
     ctb: [
-      ['NU NB',           40.0, 5],
-      ['NU ACI ROAS_LOW', 21.7, 115],
-      ['NU ACI ROAS_TOP', 8.7,  115],
-      ['NU ACI INSTALL',  14.7, 68],
-      ['NU META',         9.7,  155],
-      ['* NU.ORG',        15.5, 414],
+      ['NB',           40.0, 5],
+      ['GT_LOW', 21.7, 115],
+      ['GT_TOP', 8.7,  115],
+      ['GI_AOS',  14.7, 68],
+      ['META',         9.7,  155],
+      ['* ORG',        15.5, 414],
     ]
   },
   "2026-06-08": {
     pct: 38.6,
     ctb: [
-      ['NU NB',           40.0, 5],
-      ['NU ACI ROAS_LOW', 60.0, 115],
-      ['NU ACI ROAS_TOP', 40.0, 115],
-      ['NU ACI INSTALL',  27.9, 68],
-      ['NU META',         26.5, 155],
-      ['* NU.ORG',        36.2, 414],
+      ['NB',           40.0, 5],
+      ['GT_LOW', 60.0, 115],
+      ['GT_TOP', 40.0, 115],
+      ['GI_AOS',  27.9, 68],
+      ['META',         26.5, 155],
+      ['* ORG',        36.2, 414],
     ]
   },
   "2026-06-15": {
     pct: 57.4,
     ctb: [
-      ['NU NB',           60.0, 5],
-      ['NU ACI ROAS_LOW', 85.2, 115],
-      ['NU ACI ROAS_TOP', 54.8, 115],
-      ['NU ACI INSTALL',  44.1, 68],
-      ['NU META',         44.5, 155],
-      ['* NU.ORG',        53.9, 414],
+      ['NB',           60.0, 5],
+      ['GT_LOW', 85.2, 115],
+      ['GT_TOP', 54.8, 115],
+      ['GI_AOS',  44.1, 68],
+      ['META',         44.5, 155],
+      ['* ORG',        53.9, 414],
     ]
   },
   "2026-06-22": {
     pct: 92.6,
     ctb: [
-      ['NU NB',           80.0, 5],
-      ['NU ACI ROAS_LOW', 144.3, 115],
-      ['NU ACI ROAS_TOP', 87.8, 115],
-      ['NU ACI INSTALL',  48.5, 68],
-      ['NU META',         77.4, 155],
-      ['* NU.ORG',        81.9, 414],
+      ['NB',           80.0, 5],
+      ['GT_LOW', 144.3, 115],
+      ['GT_TOP', 87.8, 115],
+      ['GI_AOS',  48.5, 68],
+      ['META',         77.4, 155],
+      ['* ORG',        81.9, 414],
     ]
   },
 };
@@ -1076,11 +1076,13 @@ function renderOverview(w, isJuneOrLater) {
   fbcDaily.forEach(d=>{fbcCost+=d.cost;fbcInst+=d.install;fbcCont+=d.contact;fbcImps+=(d.imps||0);fbcClks+=(d.clicks||0);});
   const fbcCPM = fbcImps>0 ? Math.round(fbcCost/fbcImps*1000) : null;
   const fbcCTR = fbcImps>0 ? parseFloat((fbcClks/fbcImps*100).toFixed(2)) : null;
-  let topCost=0,topInst=0,topCont=0; topDaily.forEach(d=>{topCost+=d.cost;topInst+=d.install;topCont+=d.contact;});
-  let lowCost=0,lowInst=0,lowCont=0; lowDaily.forEach(d=>{lowCost+=d.cost;lowInst+=d.install;lowCont+=d.contact;});
+  let topCost=0,topInst=0,topCont=0,topImps=0,topClks=0; topDaily.forEach(d=>{topCost+=d.cost;topInst+=d.install;topCont+=d.contact;topImps+=(d.imps||0);topClks+=(d.clicks||0);});
+  let lowCost=0,lowInst=0,lowCont=0,lowImps=0,lowClks=0; lowDaily.forEach(d=>{lowCost+=d.cost;lowInst+=d.install;lowCont+=d.contact;lowImps+=(d.imps||0);lowClks+=(d.clicks||0);});
   const fbcCPI=fbcInst>0?Math.round(fbcCost/fbcInst):null, fbcCPA=fbcCont>0?Math.round(fbcCost/fbcCont):null;
   const topCPI=topInst>0?Math.round(topCost/topInst):null, topCPA=topCont>0?Math.round(topCost/topCont):null;
   const lowCPI=lowInst>0?Math.round(lowCost/lowInst):null, lowCPA=lowCont>0?Math.round(lowCost/lowCont):null;
+  const topCPM=topImps>0?Math.round(topCost/topImps*1000):null, topCTR=topImps>0?parseFloat((topClks/topImps*100).toFixed(2)):null;
+  const lowCPM=lowImps>0?Math.round(lowCost/lowImps*1000):null, lowCTR=lowImps>0?parseFloat((lowClks/lowImps*100).toFixed(2)):null;
 
   // 6월 이전: GI, GT(전체), FBI만
   let campRows = [];
@@ -1100,8 +1102,8 @@ function renderOverview(w, isJuneOrLater) {
     const prevFbcCPA = pfcCont>0?Math.round(pfcCost/pfcCont):null;
 
     campRows = [
-      {nm:'G.tROAS_TOP',tag:'신규',type:'GT',cost:topCost,inst:topInst,cont:topCont,cpi:topCPI,cpa:topCPA,cpm:w.gt?.cpm,ctr:w.gt?.ctr,prevCpi:prevTopCPI,prevCpa:prevTopCPA,badge:'ob-wn',label:'⚠ 모니터링'},
-      {nm:'G.tROAS_LOW',tag:'신규',type:'GT',cost:lowCost,inst:lowInst,cont:lowCont,cpi:lowCPI,cpa:lowCPA,cpm:w.gt?.cpm,ctr:w.gt?.ctr,prevCpi:prevLowCPI,prevCpa:prevLowCPA,badge:'ob-wn',label:'⚠ 모니터링'},
+      {nm:'G.tROAS_TOP',tag:'신규',type:'GT',cost:topCost,inst:topInst,cont:topCont,cpi:topCPI,cpa:topCPA,cpm:topCPM,ctr:topCTR,prevCpi:prevTopCPI,prevCpa:prevTopCPA,badge:'ob-wn',label:'⚠ 모니터링'},
+      {nm:'G.tROAS_LOW',tag:'신규',type:'GT',cost:lowCost,inst:lowInst,cont:lowCont,cpi:lowCPI,cpa:lowCPA,cpm:lowCPM,ctr:lowCTR,prevCpi:prevLowCPI,prevCpa:prevLowCPA,badge:'ob-wn',label:'⚠ 모니터링'},
       {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,prevCpi:prevGI?.cpi,prevCpa:prevGI?.cpa,badge:'ob-ok',label:'✓ 정상'},
       {nm:'FB_Install',tag:'재라이브',type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,prevCpi:prevFBI?.cpi,prevCpa:prevFBI?.cpa,badge:'ob-bd',label:'🔴 주의'},
       {nm:'FB_CPA',tag:'신규',type:'META',cost:fbcCost,inst:fbcInst,cont:fbcCont,cpi:fbcCPI,cpa:fbcCPA,cpm:fbcCPM,ctr:fbcCTR,prevCpi:prevFbcCPI,prevCpa:prevFbcCPA,badge:'ob-bd',label:'🔴 주의'},
@@ -1267,7 +1269,7 @@ function renderOverview(w, isJuneOrLater) {
         + '</div>'
         + '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">매체별 (Amplitude)</div>'
         + '<div>' + (nuData ? nuBars : '<div style="font-size:10px;color:var(--t3);padding:8px 0">이번 주차 Amplitude 데이터 미기록 — NU_PAID_DATA 업데이트 필요</div>') + '</div>'
-        + '<div style="font-size:9px;color:var(--t3);margin-top:5px">* NU.ORG은 참고용</div>'
+        + '<div style="font-size:9px;color:var(--t3);margin-top:5px">* ORG은 참고용</div>'
       + '</div>'
     + '</div>';
   }
