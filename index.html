@@ -1127,22 +1127,23 @@ function renderOverview(w, isJuneOrLater) {
   if (isJuneOrLater) {
     const KPI_BUDGET = { gt_top:10200000, gt_low:10200000, gi:4891410, meta_i:5296752, meta_c:9600000, total:41588172 };
     const KPI_INSTALL = 13432;
+    // 매체별 Install KPI (수연 제공: GI_AOS 2,854 / GT_TOP 2,910 / GT_LOW 2,910 / Meta_CPI 2,047 / Meta_CPA 2,490 / NB 221)
+    const KPI_INSTALL_MEDIA = { gt_top:2910, gt_low:2910, gi:2854, meta_i:2047, meta_c:2490 };
     const JUNE_DAYS = 30;
     const june1 = new Date('2026-06-01');
     const weekEndDate = new Date(w.week_end);
     const elapsedDays = Math.round((weekEndDate - june1) / 86400000) + 1;
     const periodPct = Math.round(elapsedDays / JUNE_DAYS * 1000) / 10;
 
-    let cumTop=0,cumLow=0,cumGi=0,cumFbi=0,cumFbc=0,cumInstGt=0,cumInstGi=0,cumInstFbi=0,cumInstFbc=0;
-    Object.entries(DAILY.top).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end) cumTop+=v.cost; });
-    Object.entries(DAILY.low).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end) cumLow+=v.cost; });
+    let cumTop=0,cumLow=0,cumGi=0,cumFbi=0,cumFbc=0,cumInstTop=0,cumInstLow=0,cumInstGi=0,cumInstFbi=0,cumInstFbc=0;
+    Object.entries(DAILY.top).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){ cumTop+=v.cost; cumInstTop+=v.install; }});
+    Object.entries(DAILY.low).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){ cumLow+=v.cost; cumInstLow+=v.install; }});
     Object.entries(DAILY.gi).forEach(([d,v])  => { if(d>='2026-06-01'&&d<=w.week_end){ cumGi+=v.cost; cumInstGi+=v.install; }});
     Object.entries(DAILY.fbi).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){ cumFbi+=v.cost; cumInstFbi+=v.install; }});
     Object.entries(DAILY.fbc).forEach(([d,v]) => { if(d>='2026-06-01'&&d<=w.week_end){ cumFbc+=v.cost; cumInstFbc+=v.install; }});
-    Object.entries(DAILY.gt).forEach(([d,v])  => { if(d>='2026-06-01'&&d<=w.week_end) cumInstGt+=v.install; });
 
     const cumTotal = cumTop+cumLow+cumGi+cumFbi+cumFbc;
-    const cumInstTotal = cumInstGt+cumInstGi+cumInstFbi+cumInstFbc;
+    const cumInstTotal = cumInstTop+cumInstLow+cumInstGi+cumInstFbi+cumInstFbc;
     const dailyInstAvg = elapsedDays > 0 ? Math.round(cumInstTotal/elapsedDays) : 0;
     const dailyInstTarget = Math.round(KPI_INSTALL/JUNE_DAYS);
 
@@ -1243,10 +1244,11 @@ function renderOverview(w, isJuneOrLater) {
           + '<div style="height:100%;width:' + Math.min(p.install,100) + '%;background:' + iColor + ';border-radius:3px"></div>'
           + '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>'
         + '</div>'
-        + instVolBar('GT전체',    cumInstGt,  KPI_INSTALL)
-        + instVolBar('GI_AOS',    cumInstGi,  KPI_INSTALL)
-        + instVolBar('FB_Install',cumInstFbi, KPI_INSTALL)
-        + instVolBar('FB_CPA',    cumInstFbc, KPI_INSTALL)
+        + instVolBar('GT_TOP',    cumInstTop, KPI_INSTALL_MEDIA.gt_top)
+        + instVolBar('GT_LOW',    cumInstLow, KPI_INSTALL_MEDIA.gt_low)
+        + instVolBar('GI_AOS',    cumInstGi,  KPI_INSTALL_MEDIA.gi)
+        + instVolBar('FB_Install',cumInstFbi, KPI_INSTALL_MEDIA.meta_i)
+        + instVolBar('FB_CPA',    cumInstFbc, KPI_INSTALL_MEDIA.meta_c)
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
           + '<div style="background:rgba(0,0,0,.04);border-radius:7px;padding:10px 12px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">누계 합계</div><div style="font-size:14px;font-weight:700">' + cumInstTotal.toLocaleString('ko') + '건</div><div style="font-size:9px;color:var(--t3)">일평균 ' + dailyInstAvg + '건/일</div></div>'
           + '<div style="background:rgba(0,0,0,.04);border-radius:7px;padding:10px 12px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">일 목표 대비</div><div style="font-size:14px;font-weight:700;color:' + (dailyInstAvg>=dailyInstTarget?'#00ABFF':'#ff4668') + '">' + (Math.round((dailyInstAvg/dailyInstTarget-1)*1000)/10) + '%</div><div style="font-size:9px;color:var(--t3)">목표 ' + dailyInstTarget + '건/일</div></div>'
