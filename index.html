@@ -309,6 +309,17 @@ const NU_PAID_DATA = {
       ['* NU.ORG',        53.9, 414],
     ]
   },
+  "2026-06-22": {
+    pct: 92.6,
+    ctb: [
+      ['NU NB',           80.0, 5],
+      ['NU ACI ROAS_LOW', 144.3, 115],
+      ['NU ACI ROAS_TOP', 87.8, 115],
+      ['NU ACI INSTALL',  48.5, 68],
+      ['NU META',         77.4, 155],
+      ['* NU.ORG',        81.9, 414],
+    ]
+  },
 };
 
 // 매체별 6/1~선택주차 누적 Install (구글시트 daily report 원본 AOS 블록 기준 직접 재계산·검증된 고정값)
@@ -1179,7 +1190,7 @@ function renderOverview(w, isJuneOrLater) {
     }
 
     // NU PAID
-    const nuData = NU_PAID_DATA[w.week_start] || NU_PAID_DATA[Object.keys(NU_PAID_DATA).sort().pop()];
+    const nuData = NU_PAID_DATA[w.week_start] || null; // 해당 주차 데이터 없으면 이전 주차 값을 재사용하지 않고 '데이터 없음' 처리
     const nuPct = nuData ? nuData.pct : null;
     const nuCtb = nuData ? nuData.ctb : [];
     const nuDiff = nuPct != null ? Math.round((nuPct - periodPct)*10)/10 : null;
@@ -1253,7 +1264,7 @@ function renderOverview(w, isJuneOrLater) {
           + '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>'
         + '</div>'
         + '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">매체별 (Amplitude)</div>'
-        + '<div>' + nuBars + '</div>'
+        + '<div>' + (nuData ? nuBars : '<div style="font-size:10px;color:var(--t3);padding:8px 0">이번 주차 Amplitude 데이터 미기록 — NU_PAID_DATA 업데이트 필요</div>') + '</div>'
         + '<div style="font-size:9px;color:var(--t3);margin-top:5px">* NU.ORG은 참고용</div>'
       + '</div>'
     + '</div>';
