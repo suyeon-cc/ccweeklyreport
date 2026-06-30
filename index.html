@@ -1538,17 +1538,40 @@ function renderInsight(weekKey) {
   if (!hier) { document.getElementById('insight-panel').innerHTML='<div class="no-data-msg">이 주차의 소재 데이터가 없습니다</div>'; return; }
   const conv = hier['chut_app_conversion (aos)'] || {};
   const inst = hier['chut_app_install (aos)'] || {};
-  const fbcMul = conv['매물형'] || {};
-  const fbcRls = conv['매물형_릴스'] || {};
-  const fbiMul = inst['매물형'] || {};
-  const fbiBrnd = inst['브랜딩형'] || {};
 
-  const rows = [
-    { lbl:'FB_CPA · 매물형', sub:'chut_app_conversion · CPA 기준', data:fbcMul, action:'↑ 예산 확대', acls:'a-up', hi:false },
-    { lbl:'FB_CPA · 매물형_릴스', sub:'chut_app_conversion', data:fbcRls, action:'↓ 예산 축소', acls:'a-cut', hi:false },
-    { lbl:'FB_Install · 브랜딩형', sub:'chut_app_install · CPI+CTR 기준', data:fbiBrnd, action:'↑ 예산 확대', acls:'a-up', hi:true },
-    { lbl:'FB_Install · 매물형', sub:'chut_app_install', data:fbiMul, action:'↓ 예산 축소', acls:'a-cut', hi:false },
-  ];
+  // 세트명이 주차마다 바뀔 수 있어(예: 매물형 OFF, 브랜딩형A/B/C 분리 등) 하드코딩된 이름 대신
+  // 해당 주차에 실제 존재하는 세트 중 비용이 발생한 세트를 CPA/CPI 기준으로 정렬해 동적으로 선택
+  function rankSets(group, metricKey) {
+    return Object.entries(group)
+      .filter(([k, v]) => v && v.cost > 0)
+      .sort((a, b) => {
+        const av = a[1][metricKey], bv = b[1][metricKey];
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        return av - bv;
+      });
+  }
+
+  const convRanked = rankSets(conv, 'cpa');
+  const instRanked = rankSets(inst, 'cpi');
+
+  const rows = [];
+  if (convRanked.length) {
+    const [bestName, bestData] = convRanked[0];
+    rows.push({ lbl:'FB_CPA · '+bestName, sub:'chut_app_conversion · CPA 기준', data:bestData, action:'↑ 예산 확대', acls:'a-up', hi:false });
+  }
+  if (convRanked.length > 1) {
+    const [worstName, worstData] = convRanked[convRanked.length-1];
+    rows.push({ lbl:'FB_CPA · '+worstName, sub:'chut_app_conversion', data:worstData, action:'↓ 예산 축소', acls:'a-cut', hi:false });
+  }
+  if (instRanked.length) {
+    const [bestName, bestData] = instRanked[0];
+    rows.push({ lbl:'FB_Install · '+bestName, sub:'chut_app_install · CPI+CTR 기준', data:bestData, action:'↑ 예산 확대', acls:'a-up', hi:true });
+  }
+  if (instRanked.length > 1) {
+    const [worstName, worstData] = instRanked[instRanked.length-1];
+    rows.push({ lbl:'FB_Install · '+worstName, sub:'chut_app_install', data:worstData, action:'↓ 예산 축소', acls:'a-cut', hi:false });
+  }
 
   const el = document.getElementById('insight-panel'); if(!el) return;
   el.innerHTML = `<div class="ip-hd">📊 광고세트 효율 비교 — 액션 우선순위 (${weekKey.slice(5)} 주차 누계)</div>
