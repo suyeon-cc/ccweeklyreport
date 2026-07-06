@@ -337,6 +337,32 @@ const META_INSIGHT_DATA = {
     <span style="display:block">· 시안별: 전기차_A CPI 2,035원·CTR 2.09%로 Best Performer. 전기차_E CTR 2.82%로 반응도 최고. C 시안은 상대적으로 성과 저조.</span>
     <span style="display:block">· 학습 신호 전환 초기 구간으로 1주 추가 데이터 축적 필요. 브랜딩형B(A/C) 중심으로 예산 집중 여부 W26 판단 예정.</span>
   `,
+  "2026-06-29": `
+    <span style="display:block;margin-bottom:5px;font-weight:700;color:#0f172a">FB_Install · W27 성과: 7/1 예산 10% 증액 + 1차 시안테스트 종료(C OFF, B 추가) + 지출한도 해제</span>
+    <span style="display:block">· CPI 3,012원(조정 전 6/25~30) → 2,258원(조정 후 7/1~5), <b style="color:#00ABFF">-25.0%</b> 개선. Install CVR 17.6%→19.7%(+2.1%p).</span>
+    <span style="display:block">· 지출한도 해제 효과 확인: 최저 CPI 세트로 예산 자동 집중. 일별 CPI는 7/4 1,603원까지 낮아졌다가 7/5 2,050원으로 소폭 반등 — 안정적 저단가 구간 재진입.</span>
+    <span style="display:block">· <b style="color:#ff4668">브랜딩형A(마세요_판매가_국산차2, 6/1 소재 단독 운영) 딜리버리 급감</b>: 일 소진 7/2 56,932원→7/3 32,344원→7/4 10,018원(3일 -82%), 노출도 동반 감소. CTR·CVR은 아직 붕괴 전이나 전형적 소재 피로 선행 신호. 백업 소재 보유 확인, <b>7/8~9 투입 권장</b>(A vs B 2라운드 표본 확보 전 투입 필요).</span>
+    <span style="display:block;margin-top:8px;margin-bottom:5px;font-weight:700;color:#0f172a">FB_CPA · W27 성과: 7/1 예산 5% 증액 + 세트 지출한도 해제(A·C 해제/B 유지)</span>
+    <span style="display:block">· CPI 4,630원→3,652원(<b style="color:#00ABFF">-21.1%</b>), CPA 69,774원→65,600원(<b style="color:#00ABFF">-6.0%</b>), Contact 28건→26건.</span>
+    <span style="display:block">· 저CPA 세트(매물형)로 예산 확대 방향은 맞았음. 7/1 재배분 직후 학습변동으로 CPA 일시 악화(169,302원) 있었으나 7/3~7/4 51,541→37,155원으로 빠르게 정상화, 액션 성공적.</span>
+    <span style="display:block">· 세트별 CPA는 매물형_릴스(56,952원)가 매물형(92,658원)보다 낮음 — CPI만으로는 릴스가 불리해 보이지만 최적화 이벤트(Contact) 기준으로는 릴스가 더 효율적. <b>매물형_릴스는 6/1 소재 2개(SUV_가격대별_영상, 인기모델_가격대별_영상)로 5주째 운영 중</b>이며 인기모델_가격대별_영상 CTR 0.59%(전체 최저)로 소재 자체 피로 신호. <b style="color:#ff4668">신규 영상 소재 투입 필요</b>.</span>
+    <span style="display:block">· 무사고_최저가_영상(매물형, 6/1 소재)은 소진 130,999원 대비 Contact 0건 — 1순위 OFF 대상.</span>
+  `,
+};
+
+// GT_TOP/GT_LOW 인사이트 코멘트 — 주차별 수동 작성(매주 실데이터+노션 맥락 기반 업데이트 필요)
+const GT_INSIGHT_DATA = {
+  "2026-06-29": `
+    <span style="display:block;margin-bottom:5px;font-weight:700;color:#0f172a">GT_TOP · W27 성과: 7/1 일예산 15% 증액(34만→39.1만원) — 보류 유지</span>
+    <span style="display:block">· CPI 2,737원(증액 전 6/25~30) → 3,362원(증액 후 7/1~5), <b style="color:#ff4668">+22.8%</b>. CPA 39,340원→58,535원, <b style="color:#ff4668">+48.8%</b>.</span>
+    <span style="display:block">· 일별 CPI(7/1~7/5): 3,488→3,177→3,513→3,500→3,178원. 하락 추세 없이 3,200~3,500원대 등락 반복 — 아직 안정화 안 됨.</span>
+    <span style="display:block">· t.ROAS 55% 상향은 <b>2주 모니터링(7/15~) 후 재검토</b>로 보류 유지. 지금 상향하면 이미 높아진 CPI 위에 추가 부담이 얹히는 구조.</span>
+    <span style="display:block;margin-top:8px;margin-bottom:5px;font-weight:700;color:#0f172a">GT_LOW · W27 성과: 7/1 일예산 35% 증액(34만→46만원) + 7/2 t.ROAS 90%→70% 하향 — 부분 개선</span>
+    <span style="display:block">· 소진 회복 명확: t.ROAS 하향 후 일 소진액 327K→<b style="color:#00ABFF">533K</b>→459K→<b style="color:#00ABFF">538K</b>원(캡 46만원 대비 7/3·7/5 초과 소진). 시스템 입찰 억제 해소 확인.</span>
+    <span style="display:block">· 다만 CPA는 실제 악화: 90%일 때 28,518원 → 70% 적용 후 84,494원(주간합산, <b style="color:#ff4668">+196%</b>). 일별로는 7/2 81,858→7/3 76,220→7/4 51,004원 개선 흐름이었으나 7/5 269,428원으로 재상승(Contact 2건, 표본 협소로 노이즈 가능성).</span>
+    <span style="display:block">· CPI는 2,236원(조정 전) → 2,834원(주간합산)이나 7/4·7/5 일별 2,536→2,438원으로 원래 수준에 근접 중.</span>
+    <span style="display:block"><b>정리: 볼륨 회복 ✅ / 단가는 아직 불안정, 개선 조짐 있으나 확정 아님 — t.ROAS 70% 유지, 1주 추가 관찰 후 재조정 판단.</b></span>
+  `,
 };
 
 
@@ -1329,7 +1355,9 @@ function renderOverview(w, isJuneOrLater) {
             <div>④ Contact 일평균 TOP ${topCont>0?(topCont/7).toFixed(1):'—'}건 / LOW ${lowCont>0?(lowCont/7).toFixed(1):'—'}건 <span style="color:#ff4668;font-weight:700">❌ 미달</span></div>
           </div></div>
         </div>
-        <div class="opt-result warn">4개 기준 중 3개 충족 → 개입 검토. 6월 신규 분리 학습 구간 감안. 2주 모니터링 후 타겟 ROAS 조정 또는 에셋 최적화 결정.</div>
+        <div class="opt-result warn">
+          ${GT_INSIGHT_DATA[w.week_start] || '4개 기준 중 3개 충족 → 개입 검토. 6월 신규 분리 학습 구간 감안. 2주 모니터링 후 타겟 ROAS 조정 또는 에셋 최적화 결정.'}
+        </div>
       </div>
       <div class="opt-box">
         <div class="opt-bh"><span class="ob ob-ok">✓ G.UAC (GI)</span><span class="opt-type">GI · 3개 중 2개 이상 충족 시 개입</span></div>
