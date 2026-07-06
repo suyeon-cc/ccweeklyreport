@@ -674,7 +674,7 @@ function updateAll() {
    CHART ENGINE
 ══════════════════════════════════════════ */
 function sparkLine(data, color, labels, unit, W, H, pL, pT, pB) {
-  W=W||240; H=H||60; pL=pL||0; pT=pT||4; pB=pB||18;
+  W=W||240; H=H||60; pL=pL||30; pT=pT||4; pB=pB||18;
   const vals = data.filter(v => v != null);
   if (!vals.length) return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px"><text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="9" fill="#94a3b8">데이터 없음</text></svg>`;
   const rawMin = Math.min(...vals), rawMax = Math.max(...vals);
@@ -700,6 +700,16 @@ function sparkLine(data, color, labels, unit, W, H, pL, pT, pB) {
   const lastPt = pts.filter(Boolean).pop();
   const dot = lastPt ? `<circle cx="${lastPt[0]}" cy="${lastPt[1]}" r="3" fill="${color}"/>` : '';
   const uid = Math.random().toString(36).slice(2);
+  // Y축 min/max 라벨 (축 값 위치를 알 수 있도록)
+  function axisFmt(v) {
+    if (v == null) return '';
+    if (unit === '%') return v.toFixed(2) + '%';
+    if (Math.abs(v) >= 10000) return (v/10000).toFixed(1) + '만';
+    return Math.round(v).toLocaleString('ko');
+  }
+  const yAxisLine = `<line x1="${pL-4}" y1="${pT}" x2="${pL-4}" y2="${H-pB}" stroke="#e2e8f0" stroke-width="1"/>`;
+  const yAxisLabels = `<text x="${pL-8}" y="${pT+4}" text-anchor="end" font-size="8" fill="#94a3b8">${axisFmt(maxV)}</text>`
+    + `<text x="${pL-8}" y="${H-pB}" text-anchor="end" font-size="8" fill="#94a3b8">${axisFmt(minV)}</text>`;
   let hoverPts = '';
   data.forEach((v, i) => {
     const x = pL+i*xS;
@@ -719,6 +729,7 @@ function sparkLine(data, color, labels, unit, W, H, pL, pT, pB) {
       <stop offset="0%" stop-color="${color}" stop-opacity=".18"/>
       <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
     </linearGradient></defs>
+    ${yAxisLine}${yAxisLabels}
     <path d="${areaD}" fill="url(#g${uid})"/>
     <path d="${pathD}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     ${dot}${hoverPts}${xlbls}
@@ -907,7 +918,7 @@ function makeTopLowCharts(containerID, dailyArr) {
   metrics.forEach(m => {
     const topD = dailyArr.map(d => d.top?.[m.key] ?? null);
     const lowD = dailyArr.map(d => d.low?.[m.key] ?? null);
-    const W=240, H=80, pL=0, pT=4, pB=20;
+    const W=240, H=80, pL=30, pT=4, pB=20;
     const allV = [...topD,...lowD].filter(v=>v!=null);
     if (!allV.length) { html+=`<div class="toplow-card"><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:8px">${m.label}</div><div style="color:var(--t3);font-size:10px">데이터 없음</div></div>`; return; }
     const rawMinV=Math.min(...allV), rawMaxV=Math.max(...allV);
@@ -915,6 +926,15 @@ function makeTopLowCharts(containerID, dailyArr) {
     const minV=rawMinV-padV, maxV=rawMaxV+padV;
     const xS=n>1?(W-pL)/(n-1):W/2;
     const sY=v=>pT+(H-pT-pB)*(1-(v-minV)/(maxV-minV));
+    function axisFmt(v) {
+      if (v == null) return '';
+      if (m.unit === '%') return v.toFixed(2) + '%';
+      if (Math.abs(v) >= 10000) return (v/10000).toFixed(1) + '만';
+      return Math.round(v).toLocaleString('ko');
+    }
+    const yAxisLine = `<line x1="${pL-4}" y1="${pT}" x2="${pL-4}" y2="${H-pB}" stroke="#e2e8f0" stroke-width="1"/>`;
+    const yAxisLabels = `<text x="${pL-8}" y="${pT+4}" text-anchor="end" font-size="8" fill="#94a3b8">${axisFmt(maxV)}</text>`
+      + `<text x="${pL-8}" y="${H-pB}" text-anchor="end" font-size="8" fill="#94a3b8">${axisFmt(minV)}</text>`;
     function buildLine(data, color) {
       const pts = data.map((v,i)=>v!=null?[pL+i*xS,sY(v)]:null);
       let d='',first=true;
@@ -1002,6 +1022,7 @@ function makeTopLowCharts(containerID, dailyArr) {
         <div><div style="font-size:9px;color:#ff8c42">LOW</div><div style="font-size:14px;font-weight:800;color:var(--t1)">${fmtV(lowCurr,m.unit)}</div><div>${wowStr(wowAvg(lowD, m.key))}</div></div>
       </div>
       <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible">
+        ${yAxisLine}${yAxisLabels}
         ${buildLine(topD,'#e84545')}
         ${buildLine(lowD,'#ff8c42')}
         ${xLabels}
@@ -1036,6 +1057,20 @@ function getTopLowDaily(ws, we) {
     top: topDays.find(x=>x.date===d) || {},
     low: lowDays.find(x=>x.date===d) || {},
   }));
+}
+
+/* ══════════════════════════════════════════
+   BADGE LOGIC (실데이터 기반 동적 판정)
+══════════════════════════════════════════ */
+function computeBadge(cpi, prevCpi, cpa, prevCpa) {
+  const cpiChange = (prevCpi && cpi) ? (cpi/prevCpi-1)*100 : null;
+  const cpaChange = (prevCpa && cpa) ? (cpa/prevCpa-1)*100 : null;
+  const changes = [cpiChange, cpaChange].filter(v => v != null);
+  if (!changes.length) return {badge:'ob-ok', label:'✓ 정상'};
+  const badCount = changes.filter(v => v > 15).length;
+  if (badCount >= 2) return {badge:'ob-bd', label:'🔴 주의'};
+  if (badCount === 1) return {badge:'ob-wn', label:'⚠ 모니터링'};
+  return {badge:'ob-ok', label:'✓ 정상'};
 }
 
 /* ══════════════════════════════════════════
@@ -1152,12 +1187,18 @@ function renderOverview(w, isJuneOrLater) {
     const prevFbcCPI = pfcInst>0?Math.round(pfcCost/pfcInst):null;
     const prevFbcCPA = pfcCont>0?Math.round(pfcCost/pfcCont):null;
 
+    const bTop = computeBadge(topCPI, prevTopCPI, topCPA, prevTopCPA);
+    const bLow = computeBadge(lowCPI, prevLowCPI, lowCPA, prevLowCPA);
+    const bGI  = computeBadge(w.gi?.cpi, prevGI?.cpi, w.gi?.cpa, prevGI?.cpa);
+    const bFbi = computeBadge(w.fbi?.cpi, prevFBI?.cpi, w.fbi?.cpa, prevFBI?.cpa);
+    const bFbc = computeBadge(fbcCPI, prevFbcCPI, fbcCPA, prevFbcCPA);
+
     campRows = [
-      {nm:'G.tROAS_TOP',tag:'신규',type:'GT',cost:topCost,inst:topInst,cont:topCont,cpi:topCPI,cpa:topCPA,cpm:topCPM,ctr:topCTR,prevCpi:prevTopCPI,prevCpa:prevTopCPA,badge:'ob-wn',label:'⚠ 모니터링'},
-      {nm:'G.tROAS_LOW',tag:'신규',type:'GT',cost:lowCost,inst:lowInst,cont:lowCont,cpi:lowCPI,cpa:lowCPA,cpm:lowCPM,ctr:lowCTR,prevCpi:prevLowCPI,prevCpa:prevLowCPA,badge:'ob-wn',label:'⚠ 모니터링'},
-      {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,prevCpi:prevGI?.cpi,prevCpa:prevGI?.cpa,badge:'ob-ok',label:'✓ 정상'},
-      {nm:'FB_Install',tag:null,type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,prevCpi:prevFBI?.cpi,prevCpa:prevFBI?.cpa,badge:'ob-bd',label:'🔴 주의'},
-      {nm:'FB_CPA',tag:'신규',type:'META',cost:fbcCost,inst:fbcInst,cont:fbcCont,cpi:fbcCPI,cpa:fbcCPA,cpm:fbcCPM,ctr:fbcCTR,prevCpi:prevFbcCPI,prevCpa:prevFbcCPA,badge:'ob-bd',label:'🔴 주의'},
+      {nm:'G.tROAS_TOP',tag:'신규',type:'GT',cost:topCost,inst:topInst,cont:topCont,cpi:topCPI,cpa:topCPA,cpm:topCPM,ctr:topCTR,prevCpi:prevTopCPI,prevCpa:prevTopCPA,badge:bTop.badge,label:bTop.label},
+      {nm:'G.tROAS_LOW',tag:'신규',type:'GT',cost:lowCost,inst:lowInst,cont:lowCont,cpi:lowCPI,cpa:lowCPA,cpm:lowCPM,ctr:lowCTR,prevCpi:prevLowCPI,prevCpa:prevLowCPA,badge:bLow.badge,label:bLow.label},
+      {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,prevCpi:prevGI?.cpi,prevCpa:prevGI?.cpa,badge:bGI.badge,label:bGI.label},
+      {nm:'FB_Install',tag:null,type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,prevCpi:prevFBI?.cpi,prevCpa:prevFBI?.cpa,badge:bFbi.badge,label:bFbi.label},
+      {nm:'FB_CPA',tag:'신규',type:'META',cost:fbcCost,inst:fbcInst,cont:fbcCont,cpi:fbcCPI,cpa:fbcCPA,cpm:fbcCPM,ctr:fbcCTR,prevCpi:prevFbcCPI,prevCpa:prevFbcCPA,badge:bFbc.badge,label:bFbc.label},
     ];
   } else {
     campRows = [
@@ -1354,7 +1395,7 @@ function renderOverview(w, isJuneOrLater) {
   _html += '<div class="sec"><span class="sec-accent">Campaign</span> 캠페인별 주간 효율</div>'
     + '<div class="card mb12">'
       + '<div class="ct">매체별 ' + w.label + ' 지표</div>'
-      + '<div class="cs">CPA = Cost ÷ CONTACT · CTR 소수점 2자리</div>'
+      + '<div class="cs">CPA = Cost ÷ CONTACT · CTR 소수점 2자리 · 판정: 전주 대비 CPI·CPA 변동폭 기준</div>'
       + '<div style="display:flex;gap:14px;margin-bottom:10px;font-size:10px">'
         + '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4668"></span><span style="color:var(--t2)">CPI·CPA 전주 대비 상승</span></span>'
         + '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00ABFF"></span><span style="color:var(--t2)">CPI·CPA 전주 대비 하락</span></span>'
@@ -1536,8 +1577,8 @@ function renderMeta(w, isJuneOrLater) {
     <div class="sec"><span class="sec-accent">CPA</span> CPA 캠페인 <span class="sec-sub">${fbcChartLabel}</span></div>
     <div class="chart4-row" id="fbc-charts"></div>` : ''}
     ${isJuneOrLater ? `
-    <div class="sec"><span class="sec-accent">Insight</span> 광고세트 효율 &amp; 액션 아이템</div>
-    <div class="insight-panel" id="insight-panel"></div>
+    <div class="sec"><span class="sec-accent">Insight</span> 광고세트 효율 비교</div>
+    <div id="insight-panel"></div>
     <div class="sec"><span class="sec-accent">Asset</span> 소재 단위 계층형 효율 <span class="sec-sub">${w.label} 누계 · FB소재별 엑셀 기준</span></div>
     <div class="card mb12">
       <div class="ct">캠페인 > 광고세트 > 소재</div>
@@ -1568,65 +1609,58 @@ function renderMeta(w, isJuneOrLater) {
 }
 
 /* ══════════════════════════════════════════
-   RENDER INSIGHT
+   RENDER INSIGHT (캠페인별 전체 광고세트 비교 — 수평 막대 차트)
 ══════════════════════════════════════════ */
 function renderInsight(weekKey) {
   const hier = HIER_DATA[weekKey];
-  if (!hier) { document.getElementById('insight-panel').innerHTML='<div class="no-data-msg">이 주차의 소재 데이터가 없습니다</div>'; return; }
+  const el = document.getElementById('insight-panel'); if(!el) return;
+  if (!hier) { el.innerHTML='<div class="no-data-msg">이 주차의 소재 데이터가 없습니다</div>'; return; }
   const conv = hier['chut_app_conversion (aos)'] || {};
   const inst = hier['chut_app_install (aos)'] || {};
 
-  // 세트명이 주차마다 바뀔 수 있어(예: 매물형 OFF, 브랜딩형A/B/C 분리 등) 하드코딩된 이름 대신
-  // 해당 주차에 실제 존재하는 세트 중 비용이 발생한 세트를 CPA/CPI 기준으로 정렬해 동적으로 선택
-  function rankSets(group, metricKey) {
-    return Object.entries(group)
-      .filter(([k, v]) => v && v.cost > 0)
-      .sort((a, b) => {
-        const av = a[1][metricKey], bv = b[1][metricKey];
-        if (av == null) return 1;
-        if (bv == null) return -1;
-        return av - bv;
-      });
+  function buildBarChart(group, metricKey, unit, title, sub, colorGood, colorBad) {
+    const entries = Object.entries(group).filter(([k,v]) => v && v.cost > 0);
+    if (!entries.length) return `<div class="card mb12"><div class="ct">${title}</div><div class="no-data-msg" style="padding:12px 0">데이터 없음</div></div>`;
+    // 값이 낮을수록 좋은 지표(CPI/CPA) 기준 오름차순 정렬
+    const sorted = entries.slice().sort((a,b) => {
+      const av = a[1][metricKey], bv = b[1][metricKey];
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return av - bv;
+    });
+    const vals = sorted.map(([,v]) => v[metricKey]).filter(v => v != null);
+    const maxV = Math.max(...vals, 1);
+    const medianV = vals.length ? vals.slice().sort((a,b)=>a-b)[Math.floor(vals.length/2)] : null;
+
+    const rows = sorted.map(([name, v]) => {
+      const val = v[metricKey];
+      const barW = val != null ? Math.max((val/maxV*100), 3) : 0;
+      const isGood = val != null && medianV != null && val <= medianV;
+      const color = val == null ? '#c0c8d8' : (isGood ? colorGood : colorBad);
+      const valDisp = val != null ? (unit==='원' ? val.toLocaleString('ko')+'원' : val) : '—';
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+          <span style="font-size:11px;font-weight:600;color:var(--t1)">${name}</span>
+          <span style="font-size:11px;font-weight:700;color:${color}">${valDisp}</span>
+        </div>
+        <div style="height:14px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden;margin-bottom:3px">
+          <div style="height:100%;width:${barW}%;background:${color};border-radius:3px;min-width:2px"></div>
+        </div>
+        <div style="font-size:9px;color:var(--t3)">Cost ${N(v.cost)}원 · Install ${N(v.install)}건 · Contact ${N(v.contact)}건${v.ctr!=null?' · CTR '+v.ctr.toFixed(2)+'%':''}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="card mb12">
+      <div class="ct">${title}</div>
+      <div class="cs">${sub}</div>
+      ${rows}
+    </div>`;
   }
 
-  const convRanked = rankSets(conv, 'cpa');
-  const instRanked = rankSets(inst, 'cpi');
+  const cpaChart = buildBarChart(conv, 'cpa', '원', 'FB_CPA · 광고세트별 CPA 비교', '낮을수록 효율적 · 파랑=중앙값 이하, 빨강=중앙값 초과 · 전체 세트 포함', '#00ABFF', '#ff4668');
+  const cpiChart = buildBarChart(inst, 'cpi', '원', 'FB_Install · 광고세트별 CPI 비교', '낮을수록 효율적 · 파랑=중앙값 이하, 빨강=중앙값 초과 · 전체 세트 포함', '#465fff', '#ff4668');
 
-  const rows = [];
-  if (convRanked.length) {
-    const [bestName, bestData] = convRanked[0];
-    rows.push({ lbl:'FB_CPA · '+bestName, sub:'chut_app_conversion · CPA 기준', data:bestData, action:'↑ 예산 확대', acls:'a-up', hi:false });
-  }
-  if (convRanked.length > 1) {
-    const [worstName, worstData] = convRanked[convRanked.length-1];
-    rows.push({ lbl:'FB_CPA · '+worstName, sub:'chut_app_conversion', data:worstData, action:'↓ 예산 축소', acls:'a-cut', hi:false });
-  }
-  if (instRanked.length) {
-    const [bestName, bestData] = instRanked[0];
-    rows.push({ lbl:'FB_Install · '+bestName, sub:'chut_app_install · CPI+CTR 기준', data:bestData, action:'↑ 예산 확대', acls:'a-up', hi:true });
-  }
-  if (instRanked.length > 1) {
-    const [worstName, worstData] = instRanked[instRanked.length-1];
-    rows.push({ lbl:'FB_Install · '+worstName, sub:'chut_app_install', data:worstData, action:'↓ 예산 축소', acls:'a-cut', hi:false });
-  }
-
-  const el = document.getElementById('insight-panel'); if(!el) return;
-  el.innerHTML = `<div class="ip-hd">📊 광고세트 효율 비교 — 액션 우선순위 (${weekKey.slice(5)} 주차 누계)</div>
-  ${rows.map(r=>`<div class="ip-row"${r.hi?' style="background:rgba(0,171,255,.04)"':''}>
-    <div><div class="ip-lbl">${r.lbl}</div><div class="ip-sub">${r.sub}</div></div>
-    <div>
-      <div class="ip-metrics">
-        <span class="ip-m">Cost <strong>${N(r.data.cost)}</strong></span>
-        <span class="ip-m">Install <strong>${N(r.data.install)}건</strong></span>
-        <span class="ip-m">CPI <strong style="color:${r.data.cpi&&r.data.cpi<3500?'#00ABFF':'#ff4668'}">${N(r.data.cpi)}원</strong></span>
-        <span class="ip-m">Contact <strong>${N(r.data.contact)}건</strong></span>
-        <span class="ip-m">CPA <strong style="color:${!r.data.cpa||r.data.cpa<200000?'#00ABFF':'#ff4668'}">${N(r.data.cpa)}원</strong></span>
-        <span class="ip-m">CPM <strong>${N(r.data.cpm)}원</strong></span>
-        <span class="ip-m">CTR <strong>${r.data.ctr?r.data.ctr.toFixed(1)+'%':'—'}</strong></span>
-      </div>
-    </div>
-    <div><span class="action-btn ${r.acls}">${r.action}</span></div>
-  </div>`).join('')}`;
+  el.innerHTML = `<div class="g2" style="align-items:start">${cpaChart}${cpiChart}</div>`;
 }
 
 /* ══════════════════════════════════════════
