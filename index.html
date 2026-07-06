@@ -1618,47 +1618,74 @@ function renderInsight(weekKey) {
   const conv = hier['chut_app_conversion (aos)'] || {};
   const inst = hier['chut_app_install (aos)'] || {};
 
-  function buildBarChart(group, metricKey, unit, title, sub, colorGood, colorBad) {
-    const entries = Object.entries(group).filter(([k,v]) => v && v.cost > 0);
+  function buildBubbleChart(group, xKey, xLabel, volKey, volLabel, title, sub, color) {
+    const entries = Object.entries(group).filter(([k,v]) => v && v.cost > 0 && v[xKey] != null);
     if (!entries.length) return `<div class="card mb12"><div class="ct">${title}</div><div class="no-data-msg" style="padding:12px 0">데이터 없음</div></div>`;
-    // 값이 낮을수록 좋은 지표(CPI/CPA) 기준 오름차순 정렬
-    const sorted = entries.slice().sort((a,b) => {
-      const av = a[1][metricKey], bv = b[1][metricKey];
-      if (av == null) return 1;
-      if (bv == null) return -1;
-      return av - bv;
-    });
-    const vals = sorted.map(([,v]) => v[metricKey]).filter(v => v != null);
-    const maxV = Math.max(...vals, 1);
-    const medianV = vals.length ? vals.slice().sort((a,b)=>a-b)[Math.floor(vals.length/2)] : null;
 
-    const rows = sorted.map(([name, v]) => {
-      const val = v[metricKey];
-      const barW = val != null ? Math.max((val/maxV*100), 3) : 0;
-      const isGood = val != null && medianV != null && val <= medianV;
-      const color = val == null ? '#c0c8d8' : (isGood ? colorGood : colorBad);
-      const valDisp = val != null ? (unit==='원' ? val.toLocaleString('ko')+'원' : val) : '—';
-      return `<div style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
-          <span style="font-size:11px;font-weight:600;color:var(--t1)">${name}</span>
-          <span style="font-size:11px;font-weight:700;color:${color}">${valDisp}</span>
-        </div>
-        <div style="height:14px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden;margin-bottom:3px">
-          <div style="height:100%;width:${barW}%;background:${color};border-radius:3px;min-width:2px"></div>
-        </div>
-        <div style="font-size:9px;color:var(--t3)">Cost ${N(v.cost)}원 · Install ${N(v.install)}건 · Contact ${N(v.contact)}건${v.ctr!=null?' · CTR '+v.ctr.toFixed(2)+'%':''}</div>
-      </div>`;
-    }).join('');
+    const xVals = entries.map(([,v]) => v[xKey]);
+    const yVals = entries.map(([,v]) => v.ctr || 0);
+    const volVals = entries.map(([,v]) => v[volKey] || 0);
+    const xMax = Math.max(...xVals) * 1.15;
+    const yMax = Math.max(...yVals, 0.1) * 1.25;
+    const volMax = Math.max(...volVals, 1);
+    const xMedian = xVals.slice().sort((a,b)=>a-b)[Math.floor(xVals.length/2)];
+
+    const W=440, H=260, mL=54, mR=20, mT=16, mB=34;
+    const plotW = W-mL-mR, plotH = H-mT-mB;
+    const sx = v => mL + (v/xMax)*plotW;
+    const sy = v => mT + plotH - (v/yMax)*plotH;
+    const sr = v => 7 + Math.sqrt(v/volMax)*22;
+
+    // gridlines (x: 4단, y: 3단)
+    let grid = '';
+    for (let i=0;i<=4;i++) {
+      const gx = mL + (plotW/4)*i;
+      const xv = (xMax/4)*i;
+      grid += `<line x1="${gx}" y1="${mT}" x2="${gx}" y2="${mT+plotH}" stroke="#eef1f5" stroke-width="1"/>`;
+      grid += `<text x="${gx}" y="${H-mB+14}" text-anchor="middle" font-size="8" fill="#94a3b8">${xv>=10000?(xv/10000).toFixed(1)+'만':Math.round(xv).toLocaleString('ko')}</text>`;
+    }
+    for (let i=0;i<=3;i++) {
+      const gy = mT + plotH - (plotH/3)*i;
+      const yv = (yMax/3)*i;
+      grid += `<line x1="${mL}" y1="${gy}" x2="${mL+plotW}" y2="${gy}" stroke="#eef1f5" stroke-width="1"/>`;
+      grid += `<text x="${mL-8}" y="${gy+3}" text-anchor="end" font-size="8" fill="#94a3b8">${yv.toFixed(1)}%</text>`;
+    }
+    // 중앙값 세로 기준선
+    const medX = sx(xMedian);
+    grid += `<line x1="${medX}" y1="${mT}" x2="${medX}" y2="${mT+plotH}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,3"/>`;
+    grid += `<text x="${medX}" y="${mT-4}" text-anchor="middle" font-size="8" fill="#94a3b8">중앙값</text>`;
+
+    let bubbles = '';
+    let labels = '';
+    entries.forEach(([name, v]) => {
+      const cx = sx(v[xKey]), cy = sy(v.ctr || 0), r = sr(v[volKey] || 0);
+      const isGood = v[xKey] <= xMedian;
+      const fill = isGood ? color.good : color.bad;
+      const valDisp = v[xKey].toLocaleString('ko')+'원';
+      bubbles += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" fill-opacity="0.75" stroke="${fill}" stroke-width="1.5" class="hover-pt" style="cursor:pointer" data-val="${xLabel} ${valDisp} · CTR ${(v.ctr||0).toFixed(2)}% · ${volLabel} ${N(v[volKey])}건 · Cost ${N(v.cost)}원" data-lbl="${name}" data-delta="—"/>`;
+      labels += `<text x="${cx}" y="${cy - r - 4}" text-anchor="middle" font-size="9" font-weight="600" fill="#334155">${name}</text>`;
+    });
 
     return `<div class="card mb12">
       <div class="ct">${title}</div>
       <div class="cs">${sub}</div>
-      ${rows}
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible">
+        ${grid}
+        ${bubbles}
+        ${labels}
+        <text x="${mL+plotW/2}" y="${H+2}" text-anchor="middle" font-size="9" fill="var(--t3)" font-weight="600">${xLabel} →</text>
+        <text x="10" y="${mT+plotH/2}" text-anchor="middle" font-size="9" fill="var(--t3)" font-weight="600" transform="rotate(-90 10 ${mT+plotH/2})">CTR(%) →</text>
+      </svg>
+      <div style="display:flex;gap:14px;margin-top:6px;font-size:9px;color:var(--t3)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${color.good}"></span>중앙값 이하(효율적)</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${color.bad}"></span>중앙값 초과</span>
+        <span>· 원 크기 = ${volLabel}</span>
+      </div>
     </div>`;
   }
 
-  const cpaChart = buildBarChart(conv, 'cpa', '원', 'FB_CPA · 광고세트별 CPA 비교', '낮을수록 효율적 · 파랑=중앙값 이하, 빨강=중앙값 초과 · 전체 세트 포함', '#00ABFF', '#ff4668');
-  const cpiChart = buildBarChart(inst, 'cpi', '원', 'FB_Install · 광고세트별 CPI 비교', '낮을수록 효율적 · 파랑=중앙값 이하, 빨강=중앙값 초과 · 전체 세트 포함', '#465fff', '#ff4668');
+  const cpaChart = buildBubbleChart(conv, 'cpa', 'CPA', 'contact', 'Contact', 'FB_CPA · 광고세트별 CPA × CTR × Contact 볼륨', 'X축 CPA(낮을수록 좋음) · Y축 CTR · 원 크기 Contact 건수', {good:'#00ABFF', bad:'#ff4668'});
+  const cpiChart = buildBubbleChart(inst, 'cpi', 'CPI', 'install', 'Install', 'FB_Install · 광고세트별 CPI × CTR × Install 볼륨', 'X축 CPI(낮을수록 좋음) · Y축 CTR · 원 크기 Install 건수', {good:'#465fff', bad:'#ff4668'});
 
   el.innerHTML = `<div class="g2" style="align-items:start">${cpaChart}${cpiChart}</div>`;
 }
