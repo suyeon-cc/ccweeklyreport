@@ -1156,7 +1156,7 @@ function renderOverview(w, isJuneOrLater) {
       {nm:'G.tROAS_TOP',tag:'신규',type:'GT',cost:topCost,inst:topInst,cont:topCont,cpi:topCPI,cpa:topCPA,cpm:topCPM,ctr:topCTR,prevCpi:prevTopCPI,prevCpa:prevTopCPA,badge:'ob-wn',label:'⚠ 모니터링'},
       {nm:'G.tROAS_LOW',tag:'신규',type:'GT',cost:lowCost,inst:lowInst,cont:lowCont,cpi:lowCPI,cpa:lowCPA,cpm:lowCPM,ctr:lowCTR,prevCpi:prevLowCPI,prevCpa:prevLowCPA,badge:'ob-wn',label:'⚠ 모니터링'},
       {nm:'G.UAC (GI)',tag:null,type:'GI',cost:w.gi?.cost,inst:w.gi?.install,cont:w.gi?.contact,cpi:w.gi?.cpi,cpa:w.gi?.cpa,cpm:w.gi?.cpm,ctr:w.gi?.ctr,prevCpi:prevGI?.cpi,prevCpa:prevGI?.cpa,badge:'ob-ok',label:'✓ 정상'},
-      {nm:'FB_Install',tag:'재라이브',type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,prevCpi:prevFBI?.cpi,prevCpa:prevFBI?.cpa,badge:'ob-bd',label:'🔴 주의'},
+      {nm:'FB_Install',tag:null,type:'META',cost:w.fbi?.cost,inst:w.fbi?.install,cont:w.fbi?.contact,cpi:w.fbi?.cpi,cpa:w.fbi?.cpa,cpm:w.fbi?.cpm,ctr:w.fbi?.ctr,prevCpi:prevFBI?.cpi,prevCpa:prevFBI?.cpa,badge:'ob-bd',label:'🔴 주의'},
       {nm:'FB_CPA',tag:'신규',type:'META',cost:fbcCost,inst:fbcInst,cont:fbcCont,cpi:fbcCPI,cpa:fbcCPA,cpm:fbcCPM,ctr:fbcCTR,prevCpi:prevFbcCPI,prevCpa:prevFbcCPA,badge:'ob-bd',label:'🔴 주의'},
     ];
   } else {
@@ -1471,9 +1471,9 @@ function renderGoogle(w, isJuneOrLater) {
         <div class="role-kpi">핵심 KPI: CPA(Contact) · Contact 일평균 ≥ 10건</div>
       </div>
     </div>
-    <div class="sec"><span class="sec-accent">GI</span> G.UAC — CPM · CTR · CPI · CPA <span class="sec-sub">${chartLabel}</span></div>
+    <div class="sec"><span class="sec-accent">GI</span> install 캠페인 — CPM · CTR · CPI · CPA <span class="sec-sub">${chartLabel}</span></div>
     <div class="chart4-row" id="gi-charts"></div>
-    <div class="sec"><span class="sec-accent">GT</span> G.tROAS 전체 — CPM · CTR · CPI · CPA <span class="sec-sub">${chartLabel}</span></div>
+    <div class="sec"><span class="sec-accent">GT</span> ROAS 캠페인 — CPM · CTR · CPI · CPA <span class="sec-sub">${chartLabel}</span></div>
     <div class="chart4-row" id="gt-charts"></div>
     ${isJuneOrLater ? `
     <div class="sec"><span class="sec-accent">GT</span> tROAS_TOP vs LOW 비교 <span class="sec-sub">${tlLabel}</span></div>
@@ -1519,7 +1519,7 @@ function renderMeta(w, isJuneOrLater) {
     <div class="role-grid">
       <div class="role-side inst">
         <div class="role-lbl">Install Volume Campaign</div>
-        <div class="role-name">FB_Install (재라이브)</div>
+        <div class="role-name">FB_Install</div>
         <div class="role-desc">앱 설치 최적화 · CPI 중심 · 광범위 유저 유입</div>
         <div class="role-kpi">핵심 KPI: CPI ≤ 1,700원 · CTR ≥ 1.0%</div>
       </div>
@@ -1530,10 +1530,10 @@ function renderMeta(w, isJuneOrLater) {
         <div class="role-kpi">핵심 KPI: CPA(Contact) · 7일 누적 Contact ≥ 20건</div>
       </div>
     </div>
-    <div class="sec"><span class="sec-accent">Install</span> FB_Install — CPM · CTR · CPI · CPA <span class="sec-sub">${fbiChartLabel}</span></div>
+    <div class="sec"><span class="sec-accent">Install</span> Install 캠페인 — CPM · CTR · CPI · CPA <span class="sec-sub">${fbiChartLabel}</span></div>
     <div class="chart4-row" id="fbi-charts"></div>
     ${isJuneOrLater ? `
-    <div class="sec"><span class="sec-accent">CPA</span> FB_CPA — CPM · CTR · CPI · CPA <span class="sec-sub">${fbcChartLabel}</span></div>
+    <div class="sec"><span class="sec-accent">CPA</span> CPA 캠페인 — CPM · CTR · CPI · CPA <span class="sec-sub">${fbcChartLabel}</span></div>
     <div class="chart4-row" id="fbc-charts"></div>` : ''}
     ${isJuneOrLater ? `
     <div class="sec"><span class="sec-accent">Insight</span> 광고세트 효율 &amp; 액션 아이템</div>
