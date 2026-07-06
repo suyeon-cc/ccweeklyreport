@@ -1691,7 +1691,11 @@ function renderInsight(weekKey) {
     const xMax = Math.max(...xVals) * 1.15;
     const yMax = Math.max(...yVals, 0.1) * 1.25;
     const volMax = Math.max(...volVals, 1);
-    const xMedian = xVals.slice().sort((a,b)=>a-b)[Math.floor(xVals.length/2)];
+    const sortedXVals = xVals.slice().sort((a,b)=>a-b);
+    const midIdx = Math.floor(sortedXVals.length/2);
+    const xMedian = sortedXVals.length % 2 !== 0
+      ? sortedXVals[midIdx]
+      : (sortedXVals[midIdx-1] + sortedXVals[midIdx]) / 2;
 
     const W=440, H=260, mL=54, mR=20, mT=16, mB=34;
     const plotW = W-mL-mR, plotH = H-mT-mB;
@@ -1750,7 +1754,7 @@ function renderInsight(weekKey) {
   const cpaChart = buildBubbleChart(conv, 'cpa', 'CPA', 'contact', 'Contact', 'FB_CPA · 광고세트별 CPA × CTR × Contact 볼륨', 'X축 CPA(낮을수록 좋음) · Y축 CTR · 원 크기 Contact 건수', {good:'#00ABFF', bad:'#ff4668'});
   const cpiChart = buildBubbleChart(inst, 'cpi', 'CPI', 'install', 'Install', 'FB_Install · 광고세트별 CPI × CTR × Install 볼륨', 'X축 CPI(낮을수록 좋음) · Y축 CTR · 원 크기 Install 건수', {good:'#465fff', bad:'#ff4668'});
 
-  el.innerHTML = `<div class="g2" style="align-items:start">${cpaChart}${cpiChart}</div>`;
+  el.innerHTML = `<div class="g2" style="align-items:start">${cpiChart}${cpaChart}</div>`;
 }
 
 /* ══════════════════════════════════════════
