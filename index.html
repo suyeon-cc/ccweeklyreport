@@ -1471,9 +1471,9 @@ function renderGoogle(w, isJuneOrLater) {
         <div class="role-kpi">핵심 KPI: CPA(Contact) · Contact 일평균 ≥ 10건</div>
       </div>
     </div>
-    <div class="sec"><span class="sec-accent">GI</span> install 캠페인 — CPM · CTR · CPI · CPA <span class="sec-sub">${chartLabel}</span></div>
+    <div class="sec"><span class="sec-accent">GI</span> install 캠페인 <span class="sec-sub">${chartLabel}</span></div>
     <div class="chart4-row" id="gi-charts"></div>
-    <div class="sec"><span class="sec-accent">GT</span> ROAS 캠페인 — CPM · CTR · CPI · CPA <span class="sec-sub">${chartLabel}</span></div>
+    <div class="sec"><span class="sec-accent">GT</span> ROAS 캠페인 <span class="sec-sub">${chartLabel}</span></div>
     <div class="chart4-row" id="gt-charts"></div>
     ${isJuneOrLater ? `
     <div class="sec"><span class="sec-accent">GT</span> tROAS_TOP vs LOW 비교 <span class="sec-sub">${tlLabel}</span></div>
@@ -1530,10 +1530,10 @@ function renderMeta(w, isJuneOrLater) {
         <div class="role-kpi">핵심 KPI: CPA(Contact) · 7일 누적 Contact ≥ 20건</div>
       </div>
     </div>
-    <div class="sec"><span class="sec-accent">Install</span> Install 캠페인 — CPM · CTR · CPI · CPA <span class="sec-sub">${fbiChartLabel}</span></div>
+    <div class="sec"><span class="sec-accent">Install</span> Install 캠페인 <span class="sec-sub">${fbiChartLabel}</span></div>
     <div class="chart4-row" id="fbi-charts"></div>
     ${isJuneOrLater ? `
-    <div class="sec"><span class="sec-accent">CPA</span> CPA 캠페인 — CPM · CTR · CPI · CPA <span class="sec-sub">${fbcChartLabel}</span></div>
+    <div class="sec"><span class="sec-accent">CPA</span> CPA 캠페인 <span class="sec-sub">${fbcChartLabel}</span></div>
     <div class="chart4-row" id="fbc-charts"></div>` : ''}
     ${isJuneOrLater ? `
     <div class="sec"><span class="sec-accent">Insight</span> 광고세트 효율 &amp; 액션 아이템</div>
