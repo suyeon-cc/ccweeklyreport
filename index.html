@@ -1468,7 +1468,7 @@ function renderOverview(w, isJuneOrLater) {
       },
       '2026-07': {
         budget: { gt_top:12121000, gt_low:14260000, gi:6318071, meta_i:6020641, meta_c:10416000, total:50659048 },
-        install: 16434,
+        install: 16560,
         installMedia: { gt_top:3748, gt_low:5495, gi:3212, meta_i:1949, meta_c:2156 },
         nuPaid: 548,
         days: 31
@@ -1518,7 +1518,8 @@ function renderOverview(w, isJuneOrLater) {
       const color = pctVal >= periodPct ? '#00ABFF' : (pctVal >= periodPct-3 ? '#8AF293' : '#ff4668');
       const barW = Math.min(pctVal, 100);
       const markL = Math.min(periodPct, 100);
-      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+      const tip = lbl + ' — ' + pctVal + '% (' + valStr + ')';
+      return '<div title="' + tip + '" style="display:flex;align-items:center;gap:8px;margin-bottom:5px;cursor:default">'
         + '<div style="font-size:10px;font-weight:500;color:var(--t2);width:80px;flex-shrink:0">' + lbl + '</div>'
         + '<div style="flex:1;height:16px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden;position:relative">'
         + '<div style="height:100%;width:' + barW + '%;background:' + color + ';border-radius:3px;min-width:2px"></div>'
@@ -1533,7 +1534,8 @@ function renderOverview(w, isJuneOrLater) {
       const color = pctVal >= periodPct ? '#00ABFF' : (pctVal >= periodPct-3 ? '#8AF293' : '#ff4668');
       const barW = Math.min(pctVal, 100);
       const markL = Math.min(periodPct, 100);
-      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+      const tip = lbl + ' — ' + pctVal + '% (' + Math.round(val).toLocaleString('ko') + '건 / ' + kpi.toLocaleString('ko') + '건)';
+      return '<div title="' + tip + '" style="display:flex;align-items:center;gap:8px;margin-bottom:5px;cursor:default">'
         + '<div style="font-size:10px;font-weight:500;color:var(--t2);width:80px;flex-shrink:0">' + lbl + '</div>'
         + '<div style="flex:1;height:16px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden;position:relative">'
         + '<div style="height:100%;width:' + barW + '%;background:' + color + ';border-radius:3px;min-width:2px"></div>'
@@ -1555,7 +1557,8 @@ function renderOverview(w, isJuneOrLater) {
       const n = item[0], p2 = item[1], kpi2 = item[2];
       const isOrg = n.startsWith('*');
       const c = isOrg ? '#c0c8d8' : (p2 >= periodPct ? '#00ABFF' : '#ff4668');
-      nuBars += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+      const tip = n + ' — ' + p2 + '% (KPI ' + kpi2 + '건)';
+      nuBars += '<div title="' + tip + '" style="display:flex;align-items:center;gap:8px;margin-bottom:5px;cursor:default">'
         + '<div style="font-size:10px;color:' + (isOrg?'var(--t3)':'var(--t2)') + ';width:130px;flex-shrink:0">' + n + '</div>'
         + '<div style="flex:1;height:16px;background:rgba(0,0,0,.05);border-radius:3px;overflow:hidden">'
         + '<div style="height:100%;width:' + Math.min(p2,100) + '%;background:' + c + ';border-radius:3px;min-width:2px"></div>'
@@ -1575,7 +1578,7 @@ function renderOverview(w, isJuneOrLater) {
           + '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + signed(Math.round((p.total-periodPct)*10)/10) + '%p</div></div>'
         + '</div>'
         + '<div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">전체 ' + Math.round(cumTotal).toLocaleString('ko') + '원</div>'
-        + '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:12px;position:relative">'
+        + '<div title="전체 예산 진척 ' + p.total + '% (' + Math.round(cumTotal).toLocaleString('ko') + '원 / ' + KPI_BUDGET.total.toLocaleString('ko') + '원) - 기간 페이스 ' + periodPct + '%" style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:12px;position:relative;cursor:default">'
           + '<div style="height:100%;width:' + Math.min(p.total,100) + '%;background:' + bColor + ';border-radius:3px"></div>'
           + '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>'
         + '</div>'
@@ -1593,7 +1596,7 @@ function renderOverview(w, isJuneOrLater) {
           + '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + signed(Math.round((p.install-periodPct)*10)/10) + '%p</div></div>'
         + '</div>'
         + '<div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">누계 ' + cumInstTotal.toLocaleString('ko') + '건 / ' + KPI_INSTALL.toLocaleString('ko') + '건</div>'
-        + '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:12px;position:relative">'
+        + '<div title="전체 Install 진척 ' + p.install + '% (' + cumInstTotal.toLocaleString('ko') + '건 / ' + KPI_INSTALL.toLocaleString('ko') + '건) - 기간 페이스 ' + periodPct + '%" style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:12px;position:relative;cursor:default">'
           + '<div style="height:100%;width:' + Math.min(p.install,100) + '%;background:' + iColor + ';border-radius:3px"></div>'
           + '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>'
         + '</div>'
@@ -1610,7 +1613,7 @@ function renderOverview(w, isJuneOrLater) {
           + '<div style="text-align:right"><div style="font-size:22px;font-weight:800;color:' + nuColor + ';letter-spacing:-1px">' + (nuPct != null ? nuPct+'%' : '—') + '</div>'
           + '<div style="font-size:9px;color:var(--t3)">기간 ' + periodPct + '% 대비 ' + (nuDiff != null ? signed(nuDiff)+'%p' : '—') + '</div></div>'
         + '</div>'
-        + '<div style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:10px;position:relative">'
+        + '<div title="' + (nuPct != null ? ('NU PAID 진척 ' + nuPct + '% - 기간 페이스 ' + periodPct + '%') : '데이터 미기록') + '" style="height:5px;background:rgba(0,0,0,.06);border-radius:3px;margin-bottom:10px;position:relative;cursor:default">'
           + (nuPct != null ? '<div style="height:100%;width:' + Math.min(nuPct,100) + '%;background:' + nuColor + ';border-radius:3px"></div>' : '')
           + '<div style="position:absolute;top:-3px;left:' + Math.min(periodPct,100) + '%;height:11px;width:1.5px;background:var(--t2)"></div>'
         + '</div>'
